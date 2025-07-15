@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: './src/renderer/index.tsx',
-  target: 'electron-renderer',
+  target: 'web',
   module: {
     rules: [
       {
@@ -63,9 +63,5 @@ module.exports = {
     port: 3000,
     hot: true,
     historyApiFallback: true,
-  },
-  node: {
-    __dirname: false,
-    __filename: false,
   },
 };

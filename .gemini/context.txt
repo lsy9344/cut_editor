@@ -1,0 +1,2 @@
+프로젝트 규칙
+- 모든 명령에 sequential-thinking MCP 서버 우선 사용

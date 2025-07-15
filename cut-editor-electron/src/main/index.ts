@@ -1,27 +1,10 @@
+
+
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
 import { WindowSettings } from '@shared/types';
-
-// Enable live reload for development
-if (!app.isPackaged && process.env.NODE_ENV === 'development') {
-  try {
-    /* eslint-disable @typescript-eslint/no-require-imports */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-var-requires */
-    require('electron-reload')(__dirname, {
-      electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-      hardResetMethod: 'exit',
-    });
-    /* eslint-enable @typescript-eslint/no-require-imports */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-enable @typescript-eslint/no-var-requires */
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('electron-reload not available in production build');
-  }
-}
 
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
@@ -37,9 +20,7 @@ class CutEditorApp {
     });
 
     app.on('window-all-closed', () => {
-      if (process.platform !== 'darwin') {
-        app.quit();
-      }
+      app.quit();
     });
 
     app.on('activate', () => {
