@@ -1,7 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { Canvas } from './Canvas';
+import { ImageCanvas } from './ImageCanvas';
 import { AppConfig } from '@shared/types';
 
 interface LayoutProps {
@@ -14,7 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({ appConfig }) => (
     <div className="flex flex-1 overflow-hidden">
       <Sidebar />
       <main className="flex-1 flex items-center justify-center p-4">
-        <Canvas />
+        <ImageCanvas />
       </main>
     </div>
   </div>

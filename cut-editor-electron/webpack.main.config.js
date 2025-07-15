@@ -35,5 +35,6 @@ module.exports = {
   },
   externals: {
     electron: 'commonjs electron',
+    'electron-reload': 'commonjs electron-reload',
   },
 };

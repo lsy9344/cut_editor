@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from './components/Layout';
 import { AppConfig } from '@shared/types';
+import { FrameProvider } from './context/FrameContext';
 
 export const App: React.FC = () => {
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
@@ -9,7 +10,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        const config = await window.electronAPI.getAppConfig() as AppConfig;
+        const config = (await window.electronAPI.getAppConfig()) as AppConfig;
         setAppConfig(config);
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -43,5 +44,9 @@ export const App: React.FC = () => {
     );
   }
 
-  return <Layout appConfig={appConfig} />;
+  return (
+    <FrameProvider>
+      <Layout appConfig={appConfig} />
+    </FrameProvider>
+  );
 };

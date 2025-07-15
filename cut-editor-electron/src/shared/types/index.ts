@@ -25,3 +25,38 @@ export interface ImageSlot {
   scale: number;
   imageUrl?: string;
 }
+
+export interface ImageFile {
+  name: string;
+  path: string;
+  data: string;
+  size: number;
+}
+
+export interface FrameSlot {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  aspectRatio?: number;
+}
+
+export interface FrameTemplate {
+  id: string;
+  name: string;
+  description: string;
+  slots: FrameSlot[];
+  orientation: 'horizontal' | 'vertical';
+  canvasWidth: number;
+  canvasHeight: number;
+  thumbnail?: string;
+}
+
+export interface FrameData {
+  template: FrameTemplate;
+  images: { [slotId: string]: ImageFile };
+  texts: { [slotId: string]: string };
+}
+
+export type FrameType = '2-frame' | '4-frame' | '6-frame' | '9-frame';

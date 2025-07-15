@@ -1,0 +1,9 @@
+{
+  "watch": ["dist/main", "dist/preload"],
+  "ext": "js",
+  "exec": "electron .",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000
+}
