@@ -6,11 +6,7 @@ import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
 import { WindowSettings } from '@shared/types';
 
-<<<<<<< Updated upstream
-=======
 
-
->>>>>>> Stashed changes
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
   private isDevelopment = !app.isPackaged;
@@ -62,12 +58,7 @@ class CutEditorApp {
     });
 
     // Load the renderer
-    if (this.isDevelopment) {
-      void this.mainWindow.loadURL('http://localhost:3000');
-      this.mainWindow.webContents.openDevTools();
-    } else {
-      void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-    }
+    void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
     // Show window when ready
     this.mainWindow.once('ready-to-show', () => {

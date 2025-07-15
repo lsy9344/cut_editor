@@ -1,3 +1,4 @@
+console.log('Preload script started.');
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '@shared/constants';
 
