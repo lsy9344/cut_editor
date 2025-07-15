@@ -25,10 +25,23 @@ if (!app.isPackaged && process.env.NODE_ENV === 'development') {
 
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
-  private isDevelopment = !app.isPackaged;
+  private isDevelopment = process.env.NODE_ENV === 'development';
 
   constructor() {
+    this.setupAppSecurity();
     this.setupEventHandlers();
+  }
+
+  private setupAppSecurity(): void {
+    // 앱이 준비되기 전에 보안 설정
+    app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
+    app.commandLine.appendSwitch('--disable-background-timer-throttling');
+    app.commandLine.appendSwitch('--disable-backgrounding-occluded-windows');
+    app.commandLine.appendSwitch('--disable-renderer-backgrounding');
+
+    // 메모리 사용량 최적화
+    app.commandLine.appendSwitch('--max-old-space-size', '4096');
+    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
   }
 
   private setupEventHandlers(): void {
@@ -45,6 +58,32 @@ class CutEditorApp {
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
         this.createMainWindow();
+      }
+    });
+
+    // 백그라운드 프로세스 충돌 처리
+    app.on('child-process-gone', (_, details) => {
+      // eslint-disable-next-line no-console
+      console.error('Child process gone:', details);
+      if (details.type === 'Utility' && details.reason === 'crashed') {
+        // 유틸리티 프로세스가 충돌한 경우 앱 재시작
+        this.handleProcessCrash();
+      }
+    });
+
+    // GPU 프로세스 충돌 처리
+    app.on('gpu-process-crashed', (_, killed) => {
+      // eslint-disable-next-line no-console
+      console.error('GPU process crashed:', { killed });
+      this.handleProcessCrash();
+    });
+
+    // 렌더러 프로세스 충돌 처리
+    app.on('render-process-gone', (_, __, details) => {
+      // eslint-disable-next-line no-console
+      console.error('Renderer process gone:', details);
+      if (details.reason === 'crashed' || details.reason === 'oom') {
+        this.handleRendererCrash();
       }
     });
 
@@ -69,6 +108,11 @@ class CutEditorApp {
         contextIsolation: true,
         nodeIntegration: false,
         preload: path.join(__dirname, '../preload/index.js'),
+        sandbox: false,
+        webSecurity: true,
+        allowRunningInsecureContent: false,
+        experimentalFeatures: false,
+        backgroundThrottling: false,
       },
       titleBarStyle: 'default',
       show: false,
@@ -93,6 +137,32 @@ class CutEditorApp {
     this.mainWindow.on('closed', () => {
       this.mainWindow = null;
     });
+  }
+
+  private handleProcessCrash(): void {
+    // eslint-disable-next-line no-console
+    console.log('Handling process crash - attempting recovery');
+
+    // 현재 창이 있다면 새로고침 시도
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      this.mainWindow.webContents.reload();
+    } else {
+      // 창이 없다면 새로 생성
+      this.createMainWindow();
+    }
+  }
+
+  private handleRendererCrash(): void {
+    // eslint-disable-next-line no-console
+    console.log('Handling renderer crash - reloading window');
+
+    if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+      // 렌더러 프로세스만 재시작
+      this.mainWindow.webContents.reload();
+    } else {
+      // 창 자체가 파괴되었다면 새로 생성
+      this.createMainWindow();
+    }
   }
 
   private setupIpcHandlers(): void {

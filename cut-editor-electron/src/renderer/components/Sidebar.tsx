@@ -8,10 +8,7 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="sidebar">
       <div className="mb-6">
-        <FrameSelector
-          selectedFrame={state.currentFrame}
-          onFrameSelect={setFrame}
-        />
+        <FrameSelector selectedFrame={state.currentFrame} onFrameSelect={setFrame} />
       </div>
 
       <div className="mb-6">
@@ -19,19 +16,19 @@ export const Sidebar: React.FC = () => {
         <div className="space-y-2">
           <button className="btn btn-outline w-full text-left justify-start">
             <span className="mr-2">🖼️</span>
-          Add Image
+            Add Image
           </button>
           <button className="btn btn-outline w-full text-left justify-start">
             <span className="mr-2">📝</span>
-          Add Text
+            Add Text
           </button>
           <button className="btn btn-outline w-full text-left justify-start">
             <span className="mr-2">🔄</span>
-          Rotate
+            Rotate
           </button>
           <button className="btn btn-outline w-full text-left justify-start">
             <span className="mr-2">↩️</span>
-          Undo
+            Undo
           </button>
         </div>
       </div>

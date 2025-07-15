@@ -1,88 +1,94 @@
-# Cut Editor - Development Progress
-
-## Current Task
-- [x] **Phase 2: Core UI Components (Week 2)** - COMPLETED
-  - [x] **Day 6-7: Frame Selection System**
-    - [x] Create FrameSelector component with interactive previews
-    - [x] Implement frame template definitions (2, 4, 6, 9 frame layouts)
-    - [x] Add frame preview thumbnails with proper scaling
-    - [x] Handle frame selection state with React Context
-    - [x] Create layout switching logic
-  - [x] **Day 8-9: Image Canvas Foundation**
-    - [x] Integrate Fabric.js for interactive canvas operations
-    - [x] Create ImageCanvas component with slot-based system
-    - [x] Implement image slot system with click selection
-    - [x] Add enhanced drag-and-drop functionality
-    - [x] Create image preview and management system
-
-## Completed
-- [x] **Phase 1: Foundation Setup (Week 1)** - FULLY COMPLETE
-  - [x] Install npm dependencies and set up development environment
-  - [x] Initialize git repository and create .gitignore
-  - [x] Create missing configuration files (webpack, prettier, jest, tailwind, postcss)
-  - [x] Create complete src/ directory structure (main/, renderer/, shared/)
-  - [x] Create main process entry point with window management
-  - [x] Set up renderer process with React and basic components
-  - [x] Set up IPC communication infrastructure
-  - [x] Create basic React component structure with Tailwind CSS
-  - [x] Test development and build processes
-  - [x] All linting, formatting, and type checking passing
-  - [x] Production build working successfully
-- [x] **Phase 2: Core UI Components (Week 2)** - FULLY COMPLETE
-  - [x] Frame template system with 4 layout options
-  - [x] FrameSelector component with visual previews
-  - [x] React Context for frame state management
-  - [x] Fabric.js canvas integration for interactive image manipulation
-  - [x] Slot-based image system with drag-and-drop support
-  - [x] Enhanced user feedback and error handling
-  - [x] TypeScript integration with Fabric.js types
-
-## Next Steps
-- [ ] **Phase 3: Text System & Export (Week 3)**
-  - [ ] **Day 11-12: Text System**
-    - [ ] Create TextEditor component for adding text to frames
-    - [ ] Implement font loading and management
-    - [ ] Add text positioning and styling controls
-    - [ ] Create text overlay system on canvas
-  - [ ] **Day 13-14: Export System**
-    - [ ] Implement high-quality image export using Sharp.js
-    - [ ] Create export options panel (resolution, format, quality)
-    - [ ] Add export progress feedback
-    - [ ] Test export quality and performance
-  - [ ] **Day 15: Polish & Testing**
-    - [ ] Add keyboard shortcuts and hotkeys
-    - [ ] Implement undo/redo functionality
-    - [ ] Performance optimization and memory management
-    - [ ] End-to-end testing and bug fixes
-
-## Technical Status
-- ✅ All automated checks passing (lint, typecheck, build)
-- ✅ Development environment fully configured
-- ✅ Complete UI framework with frame system established
-- ✅ IPC communication working
-- ✅ Window management functional
-- ✅ Interactive canvas with Fabric.js integration
-- ✅ Frame template system with 4 layout options
-- ✅ State management with React Context
-- ✅ Enhanced drag-and-drop functionality
-
-## Architecture Overview
+# 편집기 개발 진행 상황
+## 현재 작업
+- [x] **단계 2: 핵심 UI 구성 요소 (2주차)** - 완료
+- [x] **6~7일차: 프레임 선택 시스템**
+- [x] 상호작용 가능한 미리보기 기능을 갖춘 FrameSelector 구성 요소 생성
+- [x] 프레임 템플릿 정의 구현 (2, 4, 6, 9 프레임 레이아웃)
+- [x] 적절한 스케일링을 적용한 프레임 미리보기 썸네일 추가
+- [x] React 컨텍스트를 사용한 프레임 선택 상태 관리
+- [x] 레이아웃 전환 로직 생성
+- [x] **8~9일차: 이미지 캔버스 기반 구축**
+- [x] Fabric.js 통합을 통한 상호작용형 캔버스 운영
+- [x] 슬롯 기반 시스템을 갖춘 ImageCanvas 컴포넌트 생성
+- [x] 클릭 선택 기능을 갖춘 이미지 슬롯 시스템 구현
+- [x] 향상된 드래그 앤 드롭 기능 추가
+- [x] 이미지 미리보기 및 관리 시스템 생성
+## 완료
+- [x] **Phase 1: 기초 설정 (주 1)** - 완전히 완료
+- [x] npm 의존성 설치 및 개발 환경 설정
+- [x] git 저장소 초기화 및 .gitignore 생성
+- [x] 누락된 구성 파일 생성 (webpack, prettier, jest, tailwind, postcss)
+- [x] src/ 디렉토리 구조 전체 생성 (main/, renderer/, shared/)
+- [x] 창 관리 기능이 포함된 메인 프로세스 진입점 생성
+- [x] React 및 기본 컴포넌트를 사용하여 렌더러 프로세스 설정
+- [x] IPC 통신 인프라 설정
+- [x] Tailwind CSS를 사용한 기본 React 컴포넌트 구조 생성
+- [x] 개발 및 빌드 프로세스 테스트
+- [x] 모든 린팅, 포맷팅 및 타입 체크 통과
+- [x] 프로덕션 빌드 정상 작동
+- [x] **단계 2: 핵심 UI 컴포넌트 (주 2)** - 완전히 완료
+- [x] 4가지 레이아웃 옵션을 갖춘 프레임 템플릿 시스템
+- [x] 시각적 미리보기 기능을 갖춘 FrameSelector 컴포넌트
+- [x] 프레임 상태 관리를 위한 React Context
+- [x] Fabric.js 캔버스 통합을 통한 상호작용형 이미지 조작
+- [x] 드래그 앤 드롭 지원을 포함한 슬롯 기반 이미지 시스템
+- [x] 향상된 사용자 피드백 및 오류 처리
+- [x] Fabric.js 유형과의 TypeScript 통합
+## 다음 단계
+- [ ] **단계 3: 텍스트 시스템 및 수출 (주 3)**
+- [ ] **날짜 11-12: 텍스트 시스템**
+- [ ] 프레임에 텍스트를 추가하기 위한 TextEditor 구성 요소 생성
+- [ ] 폰트 로딩 및 관리 구현
+- [ ] 텍스트 위치 및 스타일링 제어 추가
+- [ ] 캔버스에 텍스트 오버레이 시스템 생성
+- [ ] **날짜 13-14: 수출 시스템**
+- [ ] Sharp.js를 사용한 고품질 이미지 수출 구현
+- [ ] 수출 옵션 패널 생성 (해상도, 형식, 품질)
+- [ ] 수출 진행 상황 피드백 추가
+- [ ] 수출 품질 및 성능 테스트
+- [ ] **날짜 15: 마무리 및 테스트**
+- [ ] 키보드 단축키 및 핫키 추가
+- [ ] 취소/다시 실행 기능 구현
+- [ ] 성능 최적화 및 메모리 관리
+- [ ] 전체 시스템 테스트 및 버그 수정
+## 기술적 상태
+- ✅ 모든 자동 검사 통과 (lint, typecheck, build)
+- ✅ 개발 환경 완전히 구성 완료
+- ✅ 프레임 시스템 포함된 UI 프레임워크 완성
+- ✅ IPC 통신 정상 작동
+- ✅ 창 관리 기능 정상 작동
+- ✅ Fabric.js 통합된 인터랙티브 캔버스
+- ✅ 4가지 레이아웃 옵션이 포함된 프레임 템플릿 시스템
+- ✅ React Context를 활용한 상태 관리
+- ✅ 드래그 앤 드롭 기능 강화
+- ✅ **Fabric.js global 의존성 문제 해결 완료**
+- ✅ **프로덕션 빌드 환경 정상화**
+- ✅ **앱 정상 실행 및 이미지 드롭 기능 복구**
+## 아키텍처 개요
 ```
 src/
-├── main/           # Electron main process ✅
-├── renderer/       # React renderer process ✅
-├── shared/         # Shared types and utilities ✅
-├── preload/        # IPC preload script ✅
-└── test/           # Test setup ✅
+├── main/ # Electron 메인 프로세스 ✅
+├── renderer/ # React 렌더러 프로세스 ✅
+├── shared/ # 공유 유형 및 유틸리티 ✅
+├── preload/ # IPC 사전 로드 스크립트 ✅
+└── test/ # 테스트 설정 ✅
 ```
-
-## Key Dependencies Ready
+## 주요 의존성 준비 완료
 - Electron v25.0.0 ✅
 - React v18.2.0 + TypeScript ✅
-- Fabric.js v5.3.0 ✅ (integrated for canvas operations)
-- Sharp v0.32.0 (for image processing)
-- Tailwind CSS ✅ (for styling)
-- @types/fabric ✅ (TypeScript support)
+- Fabric.js v5.3.0 ✅ (캔버스 작업용 통합)
+- Sharp v0.32.0 (이미지 처리용)
+- Tailwind CSS ✅ (스타일링용)
+- @types/fabric ✅ (TypeScript 지원)
+## 🔧 해결된 이슈
+- ✅ **전역 global 참조 오류 수정**: `index.js:1266 Uncaught ReferenceError: global is not defined` 해결
+- ✅ **Webpack 구성 개선**: Node.js 폴리필 및 환경 변수 처리 완료
+- ✅ **개발/프로덕션 환경 분리**: 메인 프로세스에서 올바른 환경 감지 구현
+- ✅ **Fabric.js 호환성**: 브라우저 환경에서 안전한 global 폴리필 적용
+- ✅ **공유 백그라운드 프로세스 종료 오류 해결**: "A shared background process terminated unexpectedly" 오류 완전 해결
+- ✅ **프로세스 충돌 복구 시스템**: 자동 복구 및 오류 처리 메커니즘 구현
+- ✅ **메모리 관리 최적화**: Fabric.js 객체 정리 및 메모리 누수 방지
+- ✅ **Error Boundary 구현**: 앱 레벨 오류 처리 및 복구 UI
 
 ---
-*Last updated: Phase 2 completion*
+*최종 업데이트: Phase 2 완료 + 전체 안정성 개선 완료*

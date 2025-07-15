@@ -61,10 +61,10 @@ const FrameSelector: React.FC<FrameSelectorProps> = ({
             className={`
               p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md
               ${
-          selectedFrame?.id === frame.id
-            ? 'border-blue-500 bg-blue-50 shadow-md'
-            : 'border-gray-200 hover:border-gray-300'
-          }
+                selectedFrame?.id === frame.id
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300'
+              }
             `}
           >
             <div className="flex flex-col items-center space-y-2">

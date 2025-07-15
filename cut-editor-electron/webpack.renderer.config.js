@@ -1,10 +1,14 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
-module.exports = {
-  mode: 'development',
-  entry: './src/renderer/index.tsx',
-  target: 'electron-renderer',
+module.exports = (env, argv) => {
+  const isDevelopment = argv.mode === 'development';
+  
+  return {
+    mode: argv.mode || 'development',
+    entry: './src/renderer/index.tsx',
+    target: 'electron-renderer',
   module: {
     rules: [
       {
@@ -48,6 +52,22 @@ module.exports = {
       '@renderer': path.resolve(__dirname, 'src/renderer'),
       '@shared': path.resolve(__dirname, 'src/shared'),
     },
+    fallback: {
+      "fs": false,
+      "path": false,
+      "crypto": false,
+      "stream": false,
+      "buffer": require.resolve("buffer"),
+      "process": require.resolve("process/browser"),
+      "util": false,
+      "assert": false,
+      "http": false,
+      "https": false,
+      "os": false,
+      "url": false,
+      "canvas": false,
+      "jsdom": false,
+    },
   },
   output: {
     path: path.resolve(__dirname, 'dist/renderer'),
@@ -57,6 +77,15 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src/renderer/index.html',
       filename: 'index.html',
+    }),
+    new webpack.DefinePlugin({
+      global: 'globalThis',
+      'process.env.NODE_ENV': JSON.stringify(argv.mode || 'development'),
+    }),
+    new webpack.ProvidePlugin({
+      global: 'globalThis',
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
     }),
   ],
   devServer: {
@@ -68,4 +97,5 @@ module.exports = {
     __dirname: false,
     __filename: false,
   },
+  };
 };

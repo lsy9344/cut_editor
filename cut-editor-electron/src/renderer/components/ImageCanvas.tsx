@@ -3,11 +3,20 @@ import { fabric } from 'fabric';
 import { useFrame } from '../context/FrameContext';
 import { ImageFile } from '@shared/types';
 
+// Fabric.js object interfaces
+interface FabricObjectWithData extends fabric.Object {
+  data?: {
+    type: string;
+    slotId?: string;
+  };
+}
+
 export const ImageCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,18 +61,8 @@ export const ImageCanvas: React.FC = () => {
     canvas.renderAll();
   }, []);
 
-  const setupCanvasEvents = useCallback((canvas: fabric.Canvas) => {
-    canvas.on('mouse:down', (options: any) => {
-      if (options.target && options.target.data?.type === 'slot') {
-        const slotId = options.target.data.slotId;
-        setSelectedSlot(slotId);
-        highlightSlot(canvas, slotId);
-      }
-    });
-  }, [setSelectedSlot]);
-
   const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
-    canvas.forEachObject((obj: any) => {
+    canvas.forEachObject((obj: FabricObjectWithData) => {
       if (obj.data?.type === 'slot') {
         if (obj.data.slotId === slotId) {
           obj.set({ stroke: '#3b82f6', strokeWidth: 3 });
@@ -75,9 +74,56 @@ export const ImageCanvas: React.FC = () => {
     canvas.renderAll();
   }, []);
 
+  const highlightDragOverSlot = useCallback(
+    (canvas: fabric.Canvas, slotId: string | null) => {
+      canvas.forEachObject((obj: FabricObjectWithData) => {
+        if (obj.data?.type === 'slot') {
+          if (obj.data.slotId === slotId) {
+            obj.set({ fill: '#dbeafe', stroke: '#3b82f6', strokeWidth: 3 });
+          } else if (obj.data.slotId === selectedSlot) {
+            obj.set({ fill: '#f3f4f6', stroke: '#3b82f6', strokeWidth: 3 });
+          } else {
+            obj.set({ fill: '#f3f4f6', stroke: '#d1d5db', strokeWidth: 2 });
+          }
+        }
+      });
+      canvas.renderAll();
+    },
+    [selectedSlot],
+  );
+
+  const getSlotAtPosition = useCallback(
+    (x: number, y: number): string | null => {
+      if (!currentFrame) return null;
+
+      const slot = currentFrame.slots.find(
+        slot => x >= slot.x && x <= slot.x + slot.width && y >= slot.y && y <= slot.y + slot.height,
+      );
+
+      return slot?.id ?? null;
+    },
+    [currentFrame],
+  );
+
+  const setupCanvasEvents = useCallback(
+    (canvas: fabric.Canvas) => {
+      canvas.on('mouse:down', (options: fabric.IEvent) => {
+        const target = options.target as FabricObjectWithData;
+        if (target?.data?.type === 'slot') {
+          const slotId = target.data.slotId;
+          if (slotId) {
+            setSelectedSlot(slotId);
+            highlightSlot(canvas, slotId);
+          }
+        }
+      });
+    },
+    [setSelectedSlot, highlightSlot],
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return undefined;
 
     const fabricCanvas = new fabric.Canvas(canvas, {
       width: currentFrame?.canvasWidth ?? 800,
@@ -95,106 +141,160 @@ export const ImageCanvas: React.FC = () => {
 
     setupCanvasEvents(fabricCanvas);
 
+    // eslint-disable-next-line consistent-return
     return () => {
       fabricCanvas.dispose();
       fabricCanvasRef.current = null;
     };
   }, [currentFrame, drawFrameSlots, setupCanvasEvents]);
 
-  const processImageFile = useCallback(async (file: File, slotId: string) => {
-    setIsLoading(true);
-    setError(null);
+  const addImageToCanvas = useCallback(
+    async (imageData: ImageFile, slotId: string): Promise<void> => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !currentFrame) return Promise.resolve();
 
-    try {
-      const imageData = await new Promise<ImageFile>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve({
-            name: file.name,
-            path: file.name,
-            data: result,
-            size: file.size,
-          });
-        };
-        reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-        reader.readAsDataURL(file);
+      const slot = currentFrame.slots.find(s => s.id === slotId);
+      if (!slot) return Promise.resolve();
+
+      return new Promise<void>(resolve => {
+        fabric.Image.fromURL(
+          imageData.data,
+          (img: fabric.Image) => {
+            // Ensure width and height are defined
+            const imgWidth = img.width ?? 0;
+            const imgHeight = img.height ?? 0;
+
+            if (imgWidth === 0 || imgHeight === 0) {
+              resolve();
+              return;
+            }
+
+            const scaleX = slot.width / imgWidth;
+            const scaleY = slot.height / imgHeight;
+            const scale = Math.min(scaleX, scaleY);
+
+            img.set({
+              left: slot.x,
+              top: slot.y,
+              scaleX: scale,
+              scaleY: scale,
+              selectable: true,
+              evented: true,
+              data: { type: 'image', slotId },
+            });
+
+            // 기존 이미지 정리 (메모리 누수 방지)
+            const existingImages = canvas
+              .getObjects()
+              .filter(
+                (obj: FabricObjectWithData) =>
+                  obj.data?.type === 'image' && obj.data?.slotId === slotId,
+              );
+            existingImages.forEach((obj: FabricObjectWithData) => {
+              canvas.remove(obj);
+              // Fabric.js 객체 메모리 정리
+              if ('dispose' in obj && typeof obj.dispose === 'function') {
+                obj.dispose();
+              }
+            });
+
+            const slotLabel = canvas
+              .getObjects()
+              .find(
+                (obj: FabricObjectWithData) =>
+                  obj.data?.type === 'slotLabel' && obj.data?.slotId === slotId,
+              ) as FabricObjectWithData | undefined;
+            if (slotLabel) {
+              slotLabel.set({ visible: false });
+            }
+
+            canvas.add(img);
+            canvas.renderAll();
+            resolve();
+          },
+          {
+            // 이미지 로딩 최적화
+            crossOrigin: 'anonymous',
+          },
+        );
       });
+    },
+    [currentFrame],
+  );
 
-      addImageToSlot(slotId, imageData);
-      await addImageToCanvas(imageData, slotId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process image');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [addImageToSlot]);
+  const processImageFile = useCallback(
+    async (file: File, slotId: string) => {
+      setIsLoading(true);
+      setError(null);
 
-  const addImageToCanvas = useCallback(async (imageData: ImageFile, slotId: string) => {
-    const canvas = fabricCanvasRef.current;
-    if (!canvas || !currentFrame) return;
-
-    const slot = currentFrame.slots.find(s => s.id === slotId);
-    if (!slot) return;
-
-    return new Promise<void>((resolve) => {
-      fabric.Image.fromURL(imageData.data, (img: any) => {
-        const scaleX = slot.width / (img.width || 1);
-        const scaleY = slot.height / (img.height || 1);
-        const scale = Math.min(scaleX, scaleY);
-
-        img.set({
-          left: slot.x,
-          top: slot.y,
-          scaleX: scale,
-          scaleY: scale,
-          selectable: true,
-          evented: true,
-          data: { type: 'image', slotId },
+      try {
+        const imageData = await new Promise<ImageFile>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve({
+              name: file.name,
+              path: file.name,
+              data: result,
+              size: file.size,
+            });
+          };
+          reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+          reader.readAsDataURL(file);
         });
 
-        const existingImages = canvas.getObjects().filter(
-          (obj: any) => obj.data?.type === 'image' && obj.data?.slotId === slotId,
-        );
-        existingImages.forEach((obj: any) => canvas.remove(obj));
+        addImageToSlot(slotId, imageData);
+        await addImageToCanvas(imageData, slotId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to process image');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [addImageToSlot, addImageToCanvas],
+  );
 
-        const slotLabel = canvas.getObjects().find(
-          (obj: any) => obj.data?.type === 'slotLabel' && obj.data?.slotId === slotId,
-        );
-        if (slotLabel) {
-          slotLabel.set({ visible: false });
-        }
+  const handleCanvasDrop = useCallback(
+    async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+      setDragOverSlot(null);
 
-        canvas.add(img);
-        canvas.renderAll();
-        resolve();
-      });
-    });
-  }, [currentFrame]);
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
 
-  const handleCanvasDrop = useCallback(async (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
+      // Get drop position relative to canvas
+      const rect = canvas.getElement().getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-    if (!selectedSlot) {
-      setError('Please select a slot first');
-      return;
-    }
+      // Auto-detect target slot based on drop position
+      const targetSlot = getSlotAtPosition(x, y);
 
-    const files = Array.from(e.dataTransfer?.files ?? []);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      if (!targetSlot) {
+        setError('Please drop the image directly onto a slot area');
+        return;
+      }
 
-    if (imageFiles.length === 0) {
-      setError('No image files found. Please drop valid image files.');
-      return;
-    }
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
 
-    const firstFile = imageFiles[0];
-    if (firstFile) {
-      await processImageFile(firstFile, selectedSlot);
-    }
-  }, [selectedSlot, processImageFile]);
+      if (imageFiles.length === 0) {
+        setError('No image files found. Please drop valid image files.');
+        return;
+      }
+
+      const firstFile = imageFiles[0];
+      if (firstFile) {
+        // Auto-select the slot and process the image
+        setSelectedSlot(targetSlot);
+        highlightSlot(canvas, targetSlot);
+        await processImageFile(firstFile, targetSlot);
+      }
+    },
+    [getSlotAtPosition, processImageFile, setSelectedSlot, highlightSlot],
+  );
 
   const handleCanvasClick = useCallback(async () => {
     if (!selectedSlot) {
@@ -223,16 +323,48 @@ export const ImageCanvas: React.FC = () => {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container) return undefined;
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
       setIsDragOver(true);
+
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+
+      // Get mouse position relative to canvas for slot highlighting
+      const rect = canvas.getElement().getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const hoveredSlot = getSlotAtPosition(x, y);
+      if (hoveredSlot !== dragOverSlot) {
+        setDragOverSlot(hoveredSlot);
+        highlightDragOverSlot(canvas, hoveredSlot);
+      }
     };
 
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
-      setIsDragOver(false);
+
+      // Only hide drag state if we're actually leaving the container
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const isLeavingContainer =
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom;
+
+        if (isLeavingContainer) {
+          setIsDragOver(false);
+          setDragOverSlot(null);
+          const canvas = fabricCanvasRef.current;
+          if (canvas && selectedSlot) {
+            highlightSlot(canvas, selectedSlot);
+          }
+        }
+      }
     };
 
     const handleDrop = (e: DragEvent) => {
@@ -243,12 +375,20 @@ export const ImageCanvas: React.FC = () => {
     container.addEventListener('dragleave', handleDragLeave);
     container.addEventListener('drop', handleDrop);
 
+    // eslint-disable-next-line consistent-return
     return () => {
       container.removeEventListener('dragover', handleDragOver);
       container.removeEventListener('dragleave', handleDragLeave);
       container.removeEventListener('drop', handleDrop);
     };
-  }, [handleCanvasDrop]);
+  }, [
+    handleCanvasDrop,
+    getSlotAtPosition,
+    dragOverSlot,
+    highlightDragOverSlot,
+    selectedSlot,
+    highlightSlot,
+  ]);
 
   return (
     <div
@@ -258,15 +398,20 @@ export const ImageCanvas: React.FC = () => {
       <canvas
         ref={canvasRef}
         className="cursor-pointer transition-all duration-200"
-        onClick={handleCanvasClick}
+        onClick={() => {
+          void handleCanvasClick();
+        }}
       />
 
       {isDragOver && (
-        <div className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-90 pointer-events-none">
+        <div
+          className="absolute inset-0 flex items-center justify-center
+                     bg-blue-50 bg-opacity-90 pointer-events-none"
+        >
           <div className="text-center">
             <div className="text-2xl mb-2">📁</div>
             <p className="text-blue-600 font-medium">
-              {selectedSlot ? 'Drop image into selected slot' : 'Select a slot first'}
+              {dragOverSlot ? `Drop image into ${dragOverSlot}` : 'Drop image onto any slot'}
             </p>
           </div>
         </div>
@@ -282,7 +427,10 @@ export const ImageCanvas: React.FC = () => {
       )}
 
       {error && (
-        <div className="absolute top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-sm">
+        <div
+          className="absolute top-4 right-4 bg-red-100 border border-red-400
+                     text-red-700 px-4 py-3 rounded max-w-sm"
+        >
           <p className="text-sm">{error}</p>
           <button
             onClick={() => setError(null)}
@@ -294,17 +442,22 @@ export const ImageCanvas: React.FC = () => {
       )}
 
       {selectedSlot && (
-        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg p-2">
-          <p className="text-sm text-gray-600">
-            Selected slot: {selectedSlot}
-          </p>
+        <div
+          className="absolute bottom-4 left-4 bg-white bg-opacity-90
+                      rounded-lg p-2"
+        >
+          <p className="text-sm text-gray-600">Selected slot: {selectedSlot}</p>
         </div>
       )}
 
       {frameData && Object.keys(frameData.images).length > 0 && (
-        <div className="absolute bottom-4 right-4 bg-white bg-opacity-90 rounded-lg p-2">
+        <div
+          className="absolute bottom-4 right-4 bg-white bg-opacity-90
+                      rounded-lg p-2"
+        >
           <p className="text-sm text-gray-600">
-            {Object.keys(frameData.images).length} image{Object.keys(frameData.images).length === 1 ? '' : 's'} loaded
+            {Object.keys(frameData.images).length} image
+            {Object.keys(frameData.images).length === 1 ? '' : 's'} loaded
           </p>
         </div>
       )}

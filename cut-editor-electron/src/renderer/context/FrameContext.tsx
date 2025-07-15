@@ -20,83 +20,89 @@ type FrameAction =
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'CLEAR_ERROR' };
 
+const defaultFrame = getFrameTemplate('2-frame');
 const initialState: FrameState = {
-  currentFrame: getFrameTemplate('2-frame'),
+  currentFrame: defaultFrame,
+  frameData: {
+    template: defaultFrame,
+    images: {},
+    texts: {},
+  },
   isLoading: false,
 };
 
 const frameReducer = (state: FrameState, action: FrameAction): FrameState => {
   switch (action.type) {
-  case 'SET_FRAME':
-    return {
-      ...state,
-      currentFrame: action.payload,
-      frameData: {
-        template: action.payload,
-        images: {},
-        texts: {},
-      },
-    };
-
-  case 'ADD_IMAGE_TO_SLOT':
-    if (!state.frameData) return state;
-    return {
-      ...state,
-      frameData: {
-        ...state.frameData,
-        images: {
-          ...state.frameData.images,
-          [action.payload.slotId]: action.payload.image,
+    case 'SET_FRAME':
+      return {
+        ...state,
+        currentFrame: action.payload,
+        frameData: {
+          template: action.payload,
+          images: {},
+          texts: {},
         },
-      },
-    };
+      };
 
-  case 'REMOVE_IMAGE_FROM_SLOT': {
-    if (!state.frameData) return state;
-    const newImages = { ...state.frameData.images };
-    delete newImages[action.payload];
-    return {
-      ...state,
-      frameData: {
-        ...state.frameData,
-        images: newImages,
-      },
-    };
-  }
+    case 'ADD_IMAGE_TO_SLOT':
+      if (!state.frameData) return state;
+      return {
+        ...state,
+        frameData: {
+          ...state.frameData,
+          images: {
+            ...state.frameData.images,
+            [action.payload.slotId]: action.payload.image,
+          },
+        },
+      };
 
-  case 'SET_SELECTED_SLOT':
-    return {
-      ...state,
-      selectedSlot: action.payload,
-    };
+    case 'REMOVE_IMAGE_FROM_SLOT': {
+      if (!state.frameData) return state;
+      const newImages = { ...state.frameData.images };
+      delete newImages[action.payload];
+      return {
+        ...state,
+        frameData: {
+          ...state.frameData,
+          images: newImages,
+        },
+      };
+    }
 
-  case 'CLEAR_SELECTED_SLOT': {
-    const newState = { ...state };
-    delete newState.selectedSlot;
-    return newState;
-  }
+    case 'SET_SELECTED_SLOT':
+      return {
+        ...state,
+        selectedSlot: action.payload,
+      };
 
-  case 'SET_LOADING':
-    return {
-      ...state,
-      isLoading: action.payload,
-    };
+    case 'CLEAR_SELECTED_SLOT': {
+      const newState = { ...state };
+      delete newState.selectedSlot;
+      return newState;
+    }
 
-  case 'SET_ERROR':
-    return {
-      ...state,
-      error: action.payload,
-      isLoading: false,
-    };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
 
-  case 'CLEAR_ERROR': {
-    const newState = { ...state };
-    delete newState.error;
-    return newState;
-  }
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        isLoading: false,
+      };
 
-  default:
-    return state;
+    case 'CLEAR_ERROR': {
+      const newState = { ...state };
+      delete newState.error;
+      return newState;
+    }
+
+    default:
+      return state;
   }
 };
 

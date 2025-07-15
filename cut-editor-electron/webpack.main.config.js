@@ -1,7 +1,8 @@
 const path = require('path');
+const webpack = require('webpack');
 
-module.exports = {
-  mode: 'development',
+module.exports = (env, argv) => ({
+  mode: argv.mode || 'development',
   entry: './src/main/index.ts',
   target: 'electron-main',
   module: {
@@ -25,6 +26,11 @@ module.exports = {
       '@shared': path.resolve(__dirname, 'src/shared'),
     },
   },
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(argv.mode || 'development'),
+    }),
+  ],
   output: {
     path: path.resolve(__dirname, 'dist/main'),
     filename: 'index.js',
@@ -37,4 +43,4 @@ module.exports = {
     electron: 'commonjs electron',
     'electron-reload': 'commonjs electron-reload',
   },
-};
+});

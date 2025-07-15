@@ -66,7 +66,7 @@ module.exports = {
     'semi': ['error', 'always'],
     'quotes': ['error', 'single', { avoidEscape: true }],
     'jsx-quotes': ['error', 'prefer-double'],
-    'indent': ['error', 2],
+    // 'indent': ['error', 2], // Disabled to prevent conflicts with Prettier
     'max-len': ['error', { code: 100, ignoreUrls: true }],
     'camelcase': ['error', { properties: 'never' }],
 
