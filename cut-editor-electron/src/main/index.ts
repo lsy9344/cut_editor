@@ -9,7 +9,24 @@ class CutEditorApp {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
   constructor() {
+<<<<<<< Updated upstream
     this.setupAppSecurity();
+=======
+    if (!app.requestSingleInstanceLock()) {
+      app.quit();
+      return;
+    }
+
+    app.on('second-instance', () => {
+      if (this.mainWindow) {
+        if (this.mainWindow.isMinimized()) {
+          this.mainWindow.restore();
+        }
+        this.mainWindow.focus();
+      }
+    });
+
+>>>>>>> Stashed changes
     this.setupEventHandlers();
   }
 
@@ -111,6 +128,10 @@ class CutEditorApp {
     // Load the renderer
     if (this.isDevelopment) {
       void this.mainWindow.loadURL('http://localhost:3000');
+<<<<<<< Updated upstream
+=======
+      this.mainWindow.webContents.openDevTools();
+>>>>>>> Stashed changes
     } else {
       void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
