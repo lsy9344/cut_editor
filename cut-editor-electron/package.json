@@ -49,8 +49,11 @@
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.0",
     "electron": "^25.0.0",
+<<<<<<< Updated upstream
     "electron-devtools-installer": "^4.0.0",
     "electron-reload": "^2.0.0-alpha.1",
+=======
+>>>>>>> Stashed changes
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-react": "^7.32.0",

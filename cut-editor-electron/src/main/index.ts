@@ -4,6 +4,7 @@ import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
 import { WindowSettings } from '@shared/types';
 
+<<<<<<< Updated upstream
 // Enhanced development reload system
 import { devReloadManager } from './utils/devReload';
 import { DevToolsService } from './services/devTools';
@@ -15,6 +16,8 @@ devReloadManager.init({
   ignore: [/node_modules/, /\.git/, /dist\/renderer/, /coverage/, /\.DS_Store/, /\.env/, /\.log$/],
 });
 
+=======
+>>>>>>> Stashed changes
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
   private isDevelopment = process.env.NODE_ENV === 'development';

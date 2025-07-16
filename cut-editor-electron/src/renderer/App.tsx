@@ -11,6 +11,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+<<<<<<< Updated upstream
         // Debug: Check if electronAPI is available
         if (typeof window.electronAPI === 'undefined') {
           setDebugInfo('electronAPI is not available');
@@ -19,6 +20,8 @@ export const App: React.FC = () => {
         }
 
         setDebugInfo('electronAPI available, calling getAppConfig...');
+=======
+>>>>>>> Stashed changes
         const config = (await window.electronAPI.getAppConfig()) as AppConfig;
         setAppConfig(config);
         setDebugInfo('App config loaded successfully');
@@ -38,7 +41,12 @@ export const App: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div
+<<<<<<< Updated upstream
           className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"
+=======
+          className="animate-spin rounded-full h-32 w-32 border-b-2
+        border-primary-600"
+>>>>>>> Stashed changes
           role="status"
         ></div>
       </div>

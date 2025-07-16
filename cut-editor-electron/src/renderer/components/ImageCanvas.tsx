@@ -13,6 +13,13 @@ interface FabricObjectWithData extends fabric.Object {
   };
 }
 
+interface FabricObject extends fabric.Object {
+  data?: {
+    type: string;
+    slotId: string;
+  };
+}
+
 export const ImageCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
@@ -26,7 +33,11 @@ export const ImageCanvas: React.FC = () => {
   const { currentFrame, frameData, selectedSlot } = state;
 
   const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
+<<<<<<< Updated upstream
     canvas.forEachObject((obj: FabricObjectWithData) => {
+=======
+    canvas.forEachObject((obj: FabricObject) => {
+>>>>>>> Stashed changes
       if (obj.data?.type === 'slot') {
         if (obj.data.slotId === slotId) {
           obj.set({ stroke: '#3b82f6', strokeWidth: 3 });
@@ -76,6 +87,7 @@ export const ImageCanvas: React.FC = () => {
     canvas.renderAll();
   }, []);
 
+<<<<<<< Updated upstream
   const highlightDragOverSlot = useCallback(
     (canvas: fabric.Canvas, slotId: string | null) => {
       canvas.forEachObject((obj: FabricObjectWithData) => {
@@ -119,6 +131,18 @@ export const ImageCanvas: React.FC = () => {
           }
         }
       });
+=======
+  const setupCanvasEvents = useCallback(
+    (canvas: fabric.Canvas) => {
+      canvas.on('mouse:down', (e: fabric.IEvent<MouseEvent>) => {
+        const target = e.target as FabricObject;
+        if (target && target.data?.type === 'slot') {
+          const slotId = target.data.slotId;
+          setSelectedSlot(slotId);
+          highlightSlot(canvas, slotId);
+        }
+      });
+>>>>>>> Stashed changes
     },
     [setSelectedSlot, highlightSlot],
   );
@@ -150,6 +174,7 @@ export const ImageCanvas: React.FC = () => {
   }, [currentFrame, drawFrameSlots, setupCanvasEvents]);
 
   const addImageToCanvas = useCallback(
+<<<<<<< Updated upstream
     async (imageData: ImageFile, slotId: string): Promise<void> => {
       const canvas = fabricCanvasRef.current;
       if (!canvas || !currentFrame) return Promise.resolve();
@@ -358,6 +383,19 @@ export const ImageCanvas: React.FC = () => {
     },
     [addTextToSlot, addTextToCanvas],
   );
+=======
+    (imageData: ImageFile, slotId: string): void => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !currentFrame) return;
+
+      const slot = currentFrame.slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      fabric.Image.fromURL(imageData.data, (img: fabric.Image) => {
+        const scaleX = slot.width / (img.width ?? 1);
+        const scaleY = slot.height / (img.height ?? 1);
+        const scale = Math.min(scaleX, scaleY);
+>>>>>>> Stashed changes
 
   const handleUpdateText = useCallback(
     (slotId: string, textData: TextData) => {
@@ -397,6 +435,7 @@ export const ImageCanvas: React.FC = () => {
           reader.readAsDataURL(file);
         });
 
+<<<<<<< Updated upstream
         addImageToSlot(slotId, imageData);
         await addImageToCanvas(imageData, slotId);
       } catch (err) {
@@ -462,6 +501,86 @@ export const ImageCanvas: React.FC = () => {
       }
     },
     [getSlotAtPosition, processImageFile, setSelectedSlot, highlightSlot, selectedSlot],
+=======
+        const existingImages = canvas
+          .getObjects()
+          .filter((obj: FabricObject) => obj.data?.type === 'image' && obj.data?.slotId === slotId);
+        existingImages.forEach((obj: FabricObject) => canvas.remove(obj));
+
+        const slotLabel = canvas
+          .getObjects()
+          .find(
+            (obj: FabricObject) => obj.data?.type === 'slotLabel' && obj.data?.slotId === slotId,
+          );
+        if (slotLabel) {
+          slotLabel.set({ visible: false });
+        }
+
+        canvas.add(img);
+        canvas.renderAll();
+      });
+    },
+    [currentFrame],
+  );
+
+  const processImageFile = useCallback(
+    async (file: File, slotId: string) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const imageData = await new Promise<ImageFile>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            resolve({
+              name: file.name,
+              path: file.name,
+              data: result,
+              size: file.size,
+            });
+          };
+          reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+          reader.readAsDataURL(file);
+        });
+
+        addImageToSlot(slotId, imageData);
+        addImageToCanvas(imageData, slotId);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to process image');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [addImageToSlot, addImageToCanvas],
+  );
+
+  const handleCanvasDrop = useCallback(
+    async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+
+      if (!selectedSlot) {
+        setError('Please select a slot first');
+        return;
+      }
+
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+      if (imageFiles.length === 0) {
+        setError('No image files found. Please drop valid image files.');
+        return;
+      }
+
+      const firstFile = imageFiles[0];
+      if (firstFile) {
+        await processImageFile(firstFile, selectedSlot);
+      }
+    },
+    [selectedSlot, processImageFile],
+>>>>>>> Stashed changes
   );
 
   const handleCanvasClick = useCallback(async () => {
@@ -479,7 +598,7 @@ export const ImageCanvas: React.FC = () => {
         const imageData = fileData[0];
         if (imageData) {
           addImageToSlot(selectedSlot, imageData);
-          await addImageToCanvas(imageData, selectedSlot);
+          addImageToCanvas(imageData, selectedSlot);
         }
       }
     } catch (err) {
@@ -570,8 +689,13 @@ export const ImageCanvas: React.FC = () => {
 
       {isDragOver && (
         <div
+<<<<<<< Updated upstream
           className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-90
                      pointer-events-none"
+=======
+          className="absolute inset-0 flex items-center justify-center bg-blue-50
+        bg-opacity-90 pointer-events-none"
+>>>>>>> Stashed changes
         >
           <div className="text-center">
             <div className="text-2xl mb-2">📁</div>
@@ -593,8 +717,13 @@ export const ImageCanvas: React.FC = () => {
 
       {error && (
         <div
+<<<<<<< Updated upstream
           className="absolute top-4 right-4 bg-red-100 border border-red-400 text-red-700
                      px-4 py-3 rounded max-w-sm"
+=======
+          className="absolute top-4 right-4 bg-red-100 border border-red-400
+        text-red-700 px-4 py-3 rounded max-w-sm"
+>>>>>>> Stashed changes
         >
           <p className="text-sm">{error}</p>
           <button
