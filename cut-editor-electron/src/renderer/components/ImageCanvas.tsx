@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import { useFrame } from '../context/FrameContext';
-import { ImageFile } from '@shared/types';
+import { ImageFile, TextData } from '@shared/types';
+import { getFontFamily } from '../utils/fontManager';
 
 // Fabric.js object interfaces
 interface FabricObjectWithData extends fabric.Object {
   data?: {
     type: string;
     slotId?: string;
+    textId?: string;
   };
 }
 
@@ -20,8 +22,25 @@ export const ImageCanvas: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { state, addImageToSlot, setSelectedSlot } = useFrame();
+  const {
+    state,
+    addImageToSlot,
+    setSelectedSlot,
+  } = useFrame();
   const { currentFrame, frameData, selectedSlot } = state;
+
+  const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
+    canvas.forEachObject((obj: FabricObjectWithData) => {
+      if (obj.data?.type === 'slot') {
+        if (obj.data.slotId === slotId) {
+          obj.set({ stroke: '#3b82f6', strokeWidth: 3 });
+        } else {
+          obj.set({ stroke: '#d1d5db', strokeWidth: 2 });
+        }
+      }
+    });
+    canvas.renderAll();
+  }, []);
 
   const drawFrameSlots = useCallback((canvas: fabric.Canvas, frame: typeof currentFrame) => {
     if (!frame) return;
@@ -58,19 +77,6 @@ export const ImageCanvas: React.FC = () => {
       canvas.add(slotRect, slotLabel);
     });
 
-    canvas.renderAll();
-  }, []);
-
-  const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
-    canvas.forEachObject((obj: FabricObjectWithData) => {
-      if (obj.data?.type === 'slot') {
-        if (obj.data.slotId === slotId) {
-          obj.set({ stroke: '#3b82f6', strokeWidth: 3 });
-        } else {
-          obj.set({ stroke: '#d1d5db', strokeWidth: 2 });
-        }
-      }
-    });
     canvas.renderAll();
   }, []);
 
@@ -141,8 +147,7 @@ export const ImageCanvas: React.FC = () => {
 
     setupCanvasEvents(fabricCanvas);
 
-    // eslint-disable-next-line consistent-return
-    return () => {
+    return (): void => {
       fabricCanvas.dispose();
       fabricCanvasRef.current = null;
     };
@@ -183,7 +188,7 @@ export const ImageCanvas: React.FC = () => {
               data: { type: 'image', slotId },
             });
 
-            // 기존 이미지 정리 (메모리 누수 방지)
+            // Clean up existing images to prevent memory leaks
             const existingImages = canvas
               .getObjects()
               .filter(
@@ -192,7 +197,7 @@ export const ImageCanvas: React.FC = () => {
               );
             existingImages.forEach((obj: FabricObjectWithData) => {
               canvas.remove(obj);
-              // Fabric.js 객체 메모리 정리
+              // Fabric.js object memory cleanup
               if ('dispose' in obj && typeof obj.dispose === 'function') {
                 obj.dispose();
               }
@@ -213,7 +218,7 @@ export const ImageCanvas: React.FC = () => {
             resolve();
           },
           {
-            // 이미지 로딩 최적화
+            // Image loading optimization
             crossOrigin: 'anonymous',
           },
         );
@@ -221,6 +226,159 @@ export const ImageCanvas: React.FC = () => {
     },
     [currentFrame],
   );
+
+  const addTextToCanvas = useCallback(
+    (textData: TextData, slotId: string): void => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !currentFrame) return;
+
+      const slot = currentFrame.slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      // Calculate position relative to slot
+      const x = slot.x + (slot.width * textData.x) / 100;
+      const y = slot.y + (slot.height * textData.y) / 100;
+
+      const fabricText = new fabric.Text(textData.text, {
+        left: x,
+        top: y,
+        fontFamily: getFontFamily(textData.style.fontFamily),
+        fontSize: textData.style.fontSize,
+        fill: textData.style.color,
+        textAlign: textData.style.textAlign,
+        fontWeight: textData.style.fontWeight,
+        fontStyle: textData.style.fontStyle,
+        selectable: true,
+        evented: true,
+        data: { type: 'text', slotId, textId: textData.id },
+      });
+
+      // Remove existing text with same ID
+      const existingTexts = canvas
+        .getObjects()
+        .filter(
+          (obj: FabricObjectWithData) =>
+            obj.data?.type === 'text' && obj.data?.textId === textData.id,
+        );
+      existingTexts.forEach((obj: FabricObjectWithData) => {
+        canvas.remove(obj);
+      });
+
+      canvas.add(fabricText);
+      canvas.renderAll();
+    },
+    [currentFrame],
+  );
+
+  /*
+   * Text update and removal functions - will be used when integrating with TextEditor
+   */
+  /*
+  const updateTextOnCanvas = useCallback(
+    (textData: TextData, slotId: string): void => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !currentFrame) return;
+
+      const slot = currentFrame.slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      // Find existing text object
+      const textObj = canvas
+        .getObjects()
+        .find(
+          (obj: FabricObjectWithData) =>
+            obj.data?.type === 'text' && obj.data?.textId === textData.id,
+        ) as fabric.Text;
+
+      if (textObj) {
+        // Calculate new position
+        const x = slot.x + (slot.width * textData.x) / 100;
+        const y = slot.y + (slot.height * textData.y) / 100;
+
+        textObj.set({
+          text: textData.text,
+          left: x,
+          top: y,
+          fontFamily: getFontFamily(textData.style.fontFamily),
+          fontSize: textData.style.fontSize,
+          fill: textData.style.color,
+          textAlign: textData.style.textAlign,
+          fontWeight: textData.style.fontWeight,
+          fontStyle: textData.style.fontStyle,
+        });
+        canvas.renderAll();
+      } else {
+        // If text doesn't exist, add it
+        addTextToCanvas(textData, slotId);
+      }
+    },
+    [currentFrame, addTextToCanvas],
+  );
+
+  const removeTextFromCanvas = useCallback(
+    (textId: string): void => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+
+      const textObjects = canvas
+        .getObjects()
+        .filter(
+          (obj: FabricObjectWithData) =>
+            obj.data?.type === 'text' && obj.data?.textId === textId,
+        );
+
+      textObjects.forEach((obj) => {
+        canvas.remove(obj);
+      });
+      canvas.renderAll();
+    },
+    [],
+  );
+  */
+
+  // Effect to sync text data with canvas
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !frameData || !currentFrame) return;
+
+    // Add all texts to canvas
+    Object.keys(frameData.texts).forEach((slotId) => {
+      const textData = frameData.texts[slotId];
+      if (textData) {
+        addTextToCanvas(textData, slotId);
+      }
+    });
+  }, [frameData, currentFrame, addTextToCanvas]);
+
+  /*
+   * Wrapper functions for text management with canvas sync
+   * These will be activated when integrating TextEditor with Sidebar
+   */
+  /*
+  const handleAddTextToSlot = useCallback(
+    (slotId: string, textData: TextData) => {
+      addTextToSlot(slotId, textData);
+      addTextToCanvas(textData, slotId);
+    },
+    [addTextToSlot, addTextToCanvas],
+  );
+
+  const handleUpdateText = useCallback(
+    (slotId: string, textData: TextData) => {
+      updateText(slotId, textData);
+      updateTextOnCanvas(textData, slotId);
+    },
+    [updateText, updateTextOnCanvas],
+  );
+
+  const handleRemoveTextFromSlot = useCallback(
+    (slotId: string, textId: string) => {
+      removeTextFromSlot(slotId);
+      removeTextFromCanvas(textId);
+    },
+    [removeTextFromSlot, removeTextFromCanvas],
+  );
+  */
 
   const processImageFile = useCallback(
     async (file: File, slotId: string) => {
@@ -287,13 +445,27 @@ export const ImageCanvas: React.FC = () => {
 
       const firstFile = imageFiles[0];
       if (firstFile) {
-        // Auto-select the slot and process the image
-        setSelectedSlot(targetSlot);
-        highlightSlot(canvas, targetSlot);
-        await processImageFile(firstFile, targetSlot);
+        // Auto-detect target slot based on drop position if available
+        const canvas = fabricCanvasRef.current;
+        if (canvas) {
+          const rect = canvas.getElement().getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const targetSlot = getSlotAtPosition(x, y);
+
+          if (targetSlot) {
+            setSelectedSlot(targetSlot);
+            highlightSlot(canvas, targetSlot);
+            await processImageFile(firstFile, targetSlot);
+          } else if (selectedSlot) {
+            await processImageFile(firstFile, selectedSlot);
+          } else {
+            setError('Please drop the image directly onto a slot area or select a slot first');
+          }
+        }
       }
     },
-    [getSlotAtPosition, processImageFile, setSelectedSlot, highlightSlot],
+    [getSlotAtPosition, processImageFile, setSelectedSlot, highlightSlot, selectedSlot],
   );
 
   const handleCanvasClick = useCallback(async () => {
@@ -375,8 +547,7 @@ export const ImageCanvas: React.FC = () => {
     container.addEventListener('dragleave', handleDragLeave);
     container.addEventListener('drop', handleDrop);
 
-    // eslint-disable-next-line consistent-return
-    return () => {
+    return (): void => {
       container.removeEventListener('dragover', handleDragOver);
       container.removeEventListener('dragleave', handleDragLeave);
       container.removeEventListener('drop', handleDrop);
@@ -398,15 +569,13 @@ export const ImageCanvas: React.FC = () => {
       <canvas
         ref={canvasRef}
         className="cursor-pointer transition-all duration-200"
-        onClick={() => {
-          void handleCanvasClick();
-        }}
+        onClick={() => void handleCanvasClick()}
       />
 
       {isDragOver && (
         <div
-          className="absolute inset-0 flex items-center justify-center
-                     bg-blue-50 bg-opacity-90 pointer-events-none"
+          className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-90
+                     pointer-events-none"
         >
           <div className="text-center">
             <div className="text-2xl mb-2">📁</div>
@@ -428,8 +597,8 @@ export const ImageCanvas: React.FC = () => {
 
       {error && (
         <div
-          className="absolute top-4 right-4 bg-red-100 border border-red-400
-                     text-red-700 px-4 py-3 rounded max-w-sm"
+          className="absolute top-4 right-4 bg-red-100 border border-red-400 text-red-700
+                     px-4 py-3 rounded max-w-sm"
         >
           <p className="text-sm">{error}</p>
           <button
@@ -442,10 +611,7 @@ export const ImageCanvas: React.FC = () => {
       )}
 
       {selectedSlot && (
-        <div
-          className="absolute bottom-4 left-4 bg-white bg-opacity-90
-                      rounded-lg p-2"
-        >
+        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg p-2">
           <p className="text-sm text-gray-600">Selected slot: {selectedSlot}</p>
         </div>
       )}

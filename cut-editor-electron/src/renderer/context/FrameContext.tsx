@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useReducer } from 'react';
-import { FrameData, FrameTemplate, ImageFile } from '../../shared/types';
+import { FrameData, FrameTemplate, ImageFile, TextData } from '../../shared/types';
 import { getFrameTemplate } from '../../shared/data/frameTemplates';
 
 interface FrameState {
@@ -14,6 +14,9 @@ type FrameAction =
   | { type: 'SET_FRAME'; payload: FrameTemplate }
   | { type: 'ADD_IMAGE_TO_SLOT'; payload: { slotId: string; image: ImageFile } }
   | { type: 'REMOVE_IMAGE_FROM_SLOT'; payload: string }
+  | { type: 'ADD_TEXT_TO_SLOT'; payload: { slotId: string; text: TextData } }
+  | { type: 'UPDATE_TEXT'; payload: { slotId: string; text: TextData } }
+  | { type: 'REMOVE_TEXT_FROM_SLOT'; payload: string }
   | { type: 'SET_SELECTED_SLOT'; payload: string }
   | { type: 'CLEAR_SELECTED_SLOT' }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -70,6 +73,45 @@ const frameReducer = (state: FrameState, action: FrameAction): FrameState => {
       };
     }
 
+    case 'ADD_TEXT_TO_SLOT':
+      if (!state.frameData) return state;
+      return {
+        ...state,
+        frameData: {
+          ...state.frameData,
+          texts: {
+            ...state.frameData.texts,
+            [action.payload.slotId]: action.payload.text,
+          },
+        },
+      };
+
+    case 'UPDATE_TEXT':
+      if (!state.frameData) return state;
+      return {
+        ...state,
+        frameData: {
+          ...state.frameData,
+          texts: {
+            ...state.frameData.texts,
+            [action.payload.slotId]: action.payload.text,
+          },
+        },
+      };
+
+    case 'REMOVE_TEXT_FROM_SLOT': {
+      if (!state.frameData) return state;
+      const newTexts = { ...state.frameData.texts };
+      delete newTexts[action.payload];
+      return {
+        ...state,
+        frameData: {
+          ...state.frameData,
+          texts: newTexts,
+        },
+      };
+    }
+
     case 'SET_SELECTED_SLOT':
       return {
         ...state,
@@ -111,6 +153,9 @@ interface FrameContextType {
   setFrame: (frame: FrameTemplate) => void;
   addImageToSlot: (slotId: string, image: ImageFile) => void;
   removeImageFromSlot: (slotId: string) => void;
+  addTextToSlot: (slotId: string, text: TextData) => void;
+  updateText: (slotId: string, text: TextData) => void;
+  removeTextFromSlot: (slotId: string) => void;
   setSelectedSlot: (slotId: string) => void;
   clearSelectedSlot: () => void;
   setLoading: (loading: boolean) => void;
@@ -147,6 +192,18 @@ export const FrameProvider: React.FC<FrameProviderProps> = ({ children }) => {
     dispatch({ type: 'REMOVE_IMAGE_FROM_SLOT', payload: slotId });
   };
 
+  const addTextToSlot = (slotId: string, text: TextData) => {
+    dispatch({ type: 'ADD_TEXT_TO_SLOT', payload: { slotId, text } });
+  };
+
+  const updateText = (slotId: string, text: TextData) => {
+    dispatch({ type: 'UPDATE_TEXT', payload: { slotId, text } });
+  };
+
+  const removeTextFromSlot = (slotId: string) => {
+    dispatch({ type: 'REMOVE_TEXT_FROM_SLOT', payload: slotId });
+  };
+
   const setSelectedSlot = (slotId: string) => {
     dispatch({ type: 'SET_SELECTED_SLOT', payload: slotId });
   };
@@ -172,6 +229,9 @@ export const FrameProvider: React.FC<FrameProviderProps> = ({ children }) => {
     setFrame,
     addImageToSlot,
     removeImageFromSlot,
+    addTextToSlot,
+    updateText,
+    removeTextFromSlot,
     setSelectedSlot,
     clearSelectedSlot,
     setLoading,

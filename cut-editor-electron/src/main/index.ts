@@ -4,24 +4,24 @@ import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
 import { WindowSettings } from '@shared/types';
 
-// Enable live reload for development
-if (!app.isPackaged && process.env.NODE_ENV === 'development') {
-  try {
-    /* eslint-disable @typescript-eslint/no-require-imports */
-    /* eslint-disable @typescript-eslint/no-unsafe-call */
-    /* eslint-disable @typescript-eslint/no-var-requires */
-    require('electron-reload')(__dirname, {
-      electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-      hardResetMethod: 'exit',
-    });
-    /* eslint-enable @typescript-eslint/no-require-imports */
-    /* eslint-enable @typescript-eslint/no-unsafe-call */
-    /* eslint-enable @typescript-eslint/no-var-requires */
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.log('electron-reload not available in production build');
-  }
-}
+// Enhanced development reload system
+import { devReloadManager } from './utils/devReload';
+import { DevToolsService } from './services/devTools';
+
+// Initialize enhanced dev reload
+devReloadManager.init({
+  hardResetMethod: 'exit',
+  watchRendererSrc: true,
+  ignore: [
+    /node_modules/,
+    /\.git/,
+    /dist\/renderer/,
+    /coverage/,
+    /\.DS_Store/,
+    /\.env/,
+    /\.log$/,
+  ],
+});
 
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
@@ -119,10 +119,20 @@ class CutEditorApp {
       ...(this.isDevelopment ? {} : { icon: path.join(__dirname, '../../assets/icon.png') }),
     });
 
+    // Setup development tools
+    const devTools = DevToolsService.getInstance();
+    devTools.setupDevTools(this.mainWindow);
+
     // Load the renderer
     if (this.isDevelopment) {
       void this.mainWindow.loadURL('http://localhost:3000');
-      this.mainWindow.webContents.openDevTools();
+
+      // Auto-open DevTools based on environment variable
+      if (process.env.AUTO_OPEN_DEVTOOLS !== 'false') {
+        this.mainWindow.webContents.openDevTools();
+      }
+
+      devTools.logDevInfo('Development mode: Hot reload enabled');
     } else {
       void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }

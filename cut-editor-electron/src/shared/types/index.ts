@@ -53,10 +53,27 @@ export interface FrameTemplate {
   thumbnail?: string;
 }
 
+export interface TextStyle {
+  fontFamily: string;
+  fontSize: number;
+  color: string;
+  textAlign: 'left' | 'center' | 'right';
+  fontWeight: 'normal' | 'bold';
+  fontStyle: 'normal' | 'italic';
+}
+
+export interface TextData {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  style: TextStyle;
+}
+
 export interface FrameData {
   template: FrameTemplate;
   images: { [slotId: string]: ImageFile };
-  texts: { [slotId: string]: string };
+  texts: { [slotId: string]: TextData };
 }
 
 export type FrameType = '2-frame' | '4-frame' | '6-frame' | '9-frame';

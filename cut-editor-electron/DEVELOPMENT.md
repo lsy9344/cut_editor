@@ -9,11 +9,68 @@ npm install
 # Run all quality checks
 npm run check-all
 
-# Start development
+# Start enhanced development environment
 npm run dev
+
+# Start with DevTools closed
+AUTO_OPEN_DEVTOOLS=false npm run dev
+
+# Start with debugging enabled
+npm run dev:reload
 
 # Build for production
 npm run build
+```
+
+## 🔄 Enhanced Hot Reload System
+
+### ✨ New Development Features
+
+#### **1. Enhanced Electron Reload**
+- **Main Process**: Automatic restart on file changes with smart caching
+- **Renderer Process**: Hot Module Replacement (HMR) with React Fast Refresh
+- **Preload Script**: Automatic rebuild and reload with dependency tracking
+- **File Watching**: Enhanced file watching with chokidar for better performance
+
+#### **2. Development Tools Integration**
+- **React DevTools**: Automatic installation and setup
+- **Keyboard Shortcuts**:
+  - `F12` or `Cmd+Option+I`: Toggle DevTools
+  - `Cmd+R` or `Ctrl+R`: Reload renderer
+  - `Cmd+Shift+R` or `Ctrl+Shift+R`: Hard reload ignoring cache
+- **Auto-open DevTools**: Configurable via environment variable
+
+#### **3. Smart File Watching**
+- **Performance Optimized**: Excludes node_modules, .git, dist/renderer, logs
+- **Debounced Updates**: Prevents excessive reloads on bulk changes
+- **Real-time Feedback**: Clear logging of file changes and compilation status
+
+### 🛠️ Development Scripts
+
+```bash
+# Full development environment (enhanced)
+npm run dev
+
+# Individual processes
+npm run dev:main      # Main process with enhanced watch
+npm run dev:preload   # Preload script with dependency tracking
+npm run dev:renderer  # Renderer with HMR and React Fast Refresh
+npm run dev:electron  # Electron with optimized nodemon
+
+# Debug mode with inspector
+npm run dev:reload    # Enables Node.js debugging on port 5858
+```
+
+### 🎛️ Environment Configuration
+
+Create `.env.development` for custom settings:
+```env
+NODE_ENV=development
+AUTO_OPEN_DEVTOOLS=true     # Auto-open DevTools on start
+GENERATE_SOURCEMAP=true     # Enable source maps for debugging
+FAST_REFRESH=true           # Enable React Fast Refresh
+ELECTRON_DEBUG=true         # Enable Electron debugging
+REACT_DEVTOOLS=true         # Enable React DevTools
 ```
 
 ## 🔧 Development Workflow
