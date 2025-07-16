@@ -10,7 +10,6 @@ preloadFonts();
 // Load fonts asynchronously
 // eslint-disable-next-line no-console
 loadFonts().catch(console.error);
-<<<<<<< Updated upstream
 
 // Global polyfill for Fabric.js compatibility
 interface GlobalThisWithGlobal {
@@ -46,9 +45,3 @@ root.render(
     <App />
   </ErrorBoundary>,
 );
-=======
-
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
-
-root.render(<App />);
->>>>>>> Stashed changes

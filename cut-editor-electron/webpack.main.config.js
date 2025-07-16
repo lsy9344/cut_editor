@@ -35,6 +35,7 @@ module.exports = (env, argv) => ({
     path: path.resolve(__dirname, 'dist/main'),
     filename: 'index.js',
   },
+  devtool: argv.mode === 'development' ? 'eval-source-map' : 'source-map',
   node: {
     __dirname: false,
     __filename: false,

@@ -11,7 +11,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-<<<<<<< Updated upstream
         // Debug: Check if electronAPI is available
         if (typeof window.electronAPI === 'undefined') {
           setDebugInfo('electronAPI is not available');
@@ -20,15 +19,29 @@ export const App: React.FC = () => {
         }
 
         setDebugInfo('electronAPI available, calling getAppConfig...');
-=======
->>>>>>> Stashed changes
-        const config = (await window.electronAPI.getAppConfig()) as AppConfig;
+
+        // Add timeout to prevent hanging
+        const configPromise = window.electronAPI.getAppConfig();
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('IPC timeout after 2 seconds')), 2000);
+        });
+
+        const config = (await Promise.race([configPromise, timeoutPromise])) as AppConfig;
         setAppConfig(config);
         setDebugInfo('App config loaded successfully');
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to initialize app:', error);
         setDebugInfo(`Error: ${error instanceof Error ? error.message : String(error)}`);
+
+        // Provide fallback config for development
+        const fallbackConfig: AppConfig = {
+          isDevelopment: true,
+          appName: 'Cut Editor',
+          appVersion: '1.0.0',
+        };
+        setAppConfig(fallbackConfig);
+        setDebugInfo('Using fallback config due to IPC error');
       } finally {
         setIsLoading(false);
       }
@@ -39,16 +52,19 @@ export const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div
-<<<<<<< Updated upstream
-          className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"
-=======
-          className="animate-spin rounded-full h-32 w-32 border-b-2
-        border-primary-600"
->>>>>>> Stashed changes
-          role="status"
-        ></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <div
+            className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"
+            role="status"
+          ></div>
+          <p className="text-gray-600 text-sm">Loading Cut Editor...</p>
+          {debugInfo && (
+            <div className="mt-4 p-2 bg-gray-100 rounded text-xs text-gray-500 max-w-md">
+              {debugInfo}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

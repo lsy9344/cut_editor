@@ -40,21 +40,10 @@ export const loadFonts = async (): Promise<void> => {
   try {
     for (const font of AVAILABLE_FONTS) {
       if (font.path.startsWith('./assets/')) {
-<<<<<<< Updated upstream
         const fontFace = new FontFace(font.name, `url("${font.path}")`, {
           weight: font.weight ?? 'normal',
           style: font.style ?? 'normal',
         });
-=======
-        const fontFace = new FontFace(
-          font.name,
-          `url("${font.path}")`,
-          {
-            weight: font.weight ?? 'normal',
-            style: font.style ?? 'normal',
-          },
-        );
->>>>>>> Stashed changes
 
         await fontFace.load();
         document.fonts.add(fontFace);

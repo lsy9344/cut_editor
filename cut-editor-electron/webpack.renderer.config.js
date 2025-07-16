@@ -103,9 +103,20 @@ module.exports = (env, argv) => {
   ],
   devServer: {
     port: 3000,
-    hot: true,
+    hot: false,
     historyApiFallback: true,
+    client: {
+      logging: 'warn',
+      overlay: {
+        errors: true,
+        warnings: false,
+      },
+    },
+    headers: {
+      "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+    },
   },
+  devtool: isDevelopment ? 'eval-source-map' : 'source-map',
   node: {
     __dirname: false,
     __filename: false,

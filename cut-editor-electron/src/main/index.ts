@@ -4,20 +4,6 @@ import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
 import { WindowSettings } from '@shared/types';
 
-<<<<<<< Updated upstream
-// Enhanced development reload system
-import { devReloadManager } from './utils/devReload';
-import { DevToolsService } from './services/devTools';
-
-// Initialize enhanced dev reload
-devReloadManager.init({
-  hardResetMethod: 'exit',
-  watchRendererSrc: true,
-  ignore: [/node_modules/, /\.git/, /dist\/renderer/, /coverage/, /\.DS_Store/, /\.env/, /\.log$/],
-});
-
-=======
->>>>>>> Stashed changes
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
   private isDevelopment = process.env.NODE_ENV === 'development';
@@ -108,26 +94,23 @@ class CutEditorApp {
         allowRunningInsecureContent: false,
         experimentalFeatures: false,
         backgroundThrottling: false,
+        additionalArguments: this.isDevelopment
+          ? ['--disable-web-security', '--disable-features=VizDisplayCompositor']
+          : [],
       },
       titleBarStyle: 'default',
       show: false,
       ...(this.isDevelopment ? {} : { icon: path.join(__dirname, '../../assets/icon.png') }),
     });
 
-    // Setup development tools
-    const devTools = DevToolsService.getInstance();
-    devTools.setupDevTools(this.mainWindow);
+    // Setup development tools if in development mode
+    if (this.isDevelopment) {
+      this.mainWindow.webContents.openDevTools();
+    }
 
     // Load the renderer
     if (this.isDevelopment) {
       void this.mainWindow.loadURL('http://localhost:3000');
-
-      // Auto-open DevTools based on environment variable
-      if (process.env.AUTO_OPEN_DEVTOOLS !== 'false') {
-        this.mainWindow.webContents.openDevTools();
-      }
-
-      devTools.logDevInfo('Development mode: Hot reload enabled');
     } else {
       void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
