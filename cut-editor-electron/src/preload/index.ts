@@ -1,6 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '@shared/constants';
 
+// Global polyfill for Fabric.js compatibility - earliest possible initialization
+interface GlobalThisWithGlobal {
+  global?: typeof globalThis;
+}
+
+if (typeof (globalThis as GlobalThisWithGlobal).global === 'undefined') {
+  (globalThis as GlobalThisWithGlobal).global = globalThis;
+}
+
 // Define the API that will be exposed to the renderer process
 const electronAPI = {
   // Window controls

@@ -29,14 +29,7 @@ class DevReloadManager {
     this.options = {
       electron: path.join(__dirname, '..', '..', 'node_modules', '.bin', 'electron'),
       hardResetMethod: 'exit',
-      ignore: [
-        /node_modules/,
-        /\.git/,
-        /dist\/renderer/,
-        /coverage/,
-        /\.DS_Store/,
-        /\.env/,
-      ],
+      ignore: [/node_modules/, /\.git/, /dist\/renderer/, /coverage/, /\.DS_Store/, /\.env/],
       watchRendererSrc: true,
       ...options,
     };

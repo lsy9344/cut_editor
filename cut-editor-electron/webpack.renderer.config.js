@@ -87,6 +87,19 @@ module.exports = (env, argv) => {
       process: 'process/browser',
       Buffer: ['buffer', 'Buffer'],
     }),
+    // Additional global polyfill for Fabric.js
+    new webpack.BannerPlugin({
+      banner: `
+        if (typeof global === 'undefined') {
+          var global = globalThis;
+        }
+        if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
+          window.global = window;
+        }
+      `,
+      raw: true,
+      entryOnly: false,
+    }),
   ],
   devServer: {
     port: 3000,

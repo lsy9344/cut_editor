@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FrameSelector from './FrameSelector';
+import { TextEditor } from './TextEditor';
 import { useFrame } from '../context/FrameContext';
 
 export const Sidebar: React.FC = () => {
-  const { state, setFrame } = useFrame();
+  const { state, setFrame, addTextToSlot, updateText, removeTextFromSlot } = useFrame();
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   return (
     <aside className="sidebar">
@@ -18,7 +21,15 @@ export const Sidebar: React.FC = () => {
             <span className="mr-2">🖼️</span>
             Add Image
           </button>
-          <button className="btn btn-outline w-full text-left justify-start">
+          <button
+            onClick={() => {
+              // Use the current frame's first slot as default
+              const firstSlot = state.frameData?.template.slots?.[0]?.id ?? 'slot-1';
+              setSelectedSlot(firstSlot);
+              setShowTextEditor(true);
+            }}
+            className="btn btn-outline w-full text-left justify-start"
+          >
             <span className="mr-2">📝</span>
             Add Text
           </button>
@@ -32,6 +43,31 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Text Elements Section */}
+      {state.frameData?.texts && Object.keys(state.frameData.texts).length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Text Elements</h2>
+          <div className="space-y-2">
+            {Object.entries(state.frameData.texts).map(([slotId, textData]) => (
+              <button
+                key={slotId}
+                onClick={() => {
+                  setSelectedSlot(slotId);
+                  setShowTextEditor(true);
+                }}
+                className="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50
+                          transition-colors"
+              >
+                <div className="text-sm font-medium text-gray-900 truncate">{textData.text}</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {textData.style.fontFamily} • {textData.style.fontSize}px
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
@@ -53,6 +89,21 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Text Editor Modal */}
+      {showTextEditor && selectedSlot && (
+        <TextEditor
+          slotId={selectedSlot}
+          initialText={state.frameData?.texts?.[selectedSlot]}
+          onTextAdd={addTextToSlot}
+          onTextUpdate={updateText}
+          onTextRemove={removeTextFromSlot}
+          onClose={() => {
+            setShowTextEditor(false);
+            setSelectedSlot(null);
+          }}
+        />
+      )}
     </aside>
   );
 };

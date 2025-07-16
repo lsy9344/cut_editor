@@ -16,7 +16,25 @@ interface GlobalThisWithGlobal {
   global?: typeof globalThis;
 }
 
+// Multiple approaches to ensure global is defined
 if (typeof (globalThis as GlobalThisWithGlobal).global === 'undefined') {
+  (globalThis as GlobalThisWithGlobal).global = globalThis;
+}
+
+// Additional polyfill for window.global
+interface WindowWithGlobal {
+  global?: typeof globalThis;
+}
+
+if (
+  typeof window !== 'undefined' &&
+  typeof (window as unknown as WindowWithGlobal).global === 'undefined'
+) {
+  (window as unknown as WindowWithGlobal).global = window;
+}
+
+// Fallback polyfill at the very beginning
+if (typeof global === 'undefined') {
   (globalThis as GlobalThisWithGlobal).global = globalThis;
 }
 

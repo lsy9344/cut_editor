@@ -4,7 +4,7 @@ import { AVAILABLE_FONTS, DEFAULT_FONT, getFontFamily } from '../utils/fontManag
 
 interface TextEditorProps {
   slotId: string;
-  initialText?: TextData;
+  initialText?: TextData | undefined;
   onTextAdd: (slotId: string, text: TextData) => void;
   onTextUpdate: (slotId: string, text: TextData) => void;
   onTextRemove: (slotId: string) => void;
@@ -29,9 +29,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
   onClose,
 }) => {
   const [text, setText] = useState(initialText?.text ?? '');
-  const [style, setStyle] = useState<TextStyle>(
-    initialText?.style ?? DEFAULT_TEXT_STYLE,
-  );
+  const [style, setStyle] = useState<TextStyle>(initialText?.style ?? DEFAULT_TEXT_STYLE);
   const [position, setPosition] = useState({
     x: initialText?.x ?? 50,
     y: initialText?.y ?? 50,
@@ -44,12 +42,9 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     [],
   );
 
-  const handlePositionChange = useCallback(
-    (axis: 'x' | 'y', value: number) => {
-      setPosition(prev => ({ ...prev, [axis]: value }));
-    },
-    [],
-  );
+  const handlePositionChange = useCallback((axis: 'x' | 'y', value: number) => {
+    setPosition(prev => ({ ...prev, [axis]: value }));
+  }, []);
 
   const handleSave = useCallback(() => {
     if (!text.trim()) {
@@ -84,25 +79,18 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">
-            {initialText ? 'Edit Text' : 'Add Text'}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-xl"
-          >
+          <h3 className="text-lg font-semibold">{initialText ? 'Edit Text' : 'Add Text'}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl">
             ×
           </button>
         </div>
 
         {/* Text Input */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Text Content
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Text Content</label>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={e => setText(e.target.value)}
             placeholder="Enter your text here..."
             className="w-full p-3 border border-gray-300 rounded-md resize-none h-20"
             style={{ fontFamily: getFontFamily(style.fontFamily) }}
@@ -111,15 +99,13 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
         {/* Font Settings */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Font Family
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
           <select
             value={style.fontFamily}
-            onChange={(e) => handleStyleChange('fontFamily', e.target.value)}
+            onChange={e => handleStyleChange('fontFamily', e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md"
           >
-            {AVAILABLE_FONTS.map((font) => (
+            {AVAILABLE_FONTS.map(font => (
               <option key={font.name} value={font.name}>
                 {font.name}
               </option>
@@ -137,27 +123,25 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             min="12"
             max="72"
             value={style.fontSize}
-            onChange={(e) => handleStyleChange('fontSize', parseInt(e.target.value, 10))}
+            onChange={e => handleStyleChange('fontSize', parseInt(e.target.value, 10))}
             className="w-full"
           />
         </div>
 
         {/* Text Color */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Text Color
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
           <div className="flex items-center space-x-2">
             <input
               type="color"
               value={style.color}
-              onChange={(e) => handleStyleChange('color', e.target.value)}
+              onChange={e => handleStyleChange('color', e.target.value)}
               className="w-10 h-10 border border-gray-300 rounded"
             />
             <input
               type="text"
               value={style.color}
-              onChange={(e) => handleStyleChange('color', e.target.value)}
+              onChange={e => handleStyleChange('color', e.target.value)}
               className="flex-1 p-2 border border-gray-300 rounded-md font-mono text-sm"
               placeholder="#000000"
             />
@@ -166,11 +150,9 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
         {/* Text Alignment */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Text Alignment
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Text Alignment</label>
           <div className="flex space-x-2">
-            {(['left', 'center', 'right'] as const).map((align) => (
+            {(['left', 'center', 'right'] as const).map(align => (
               <button
                 key={align}
                 onClick={() => handleStyleChange('textAlign', align)}
@@ -188,9 +170,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
         {/* Font Style */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Font Style
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Font Style</label>
           <div className="flex space-x-2">
             <button
               onClick={() =>
@@ -221,9 +201,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
         {/* Position Controls */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Position
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs text-gray-600 mb-1">X: {position.x}%</label>
@@ -232,7 +210,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
                 min="0"
                 max="100"
                 value={position.x}
-                onChange={(e) => handlePositionChange('x', parseInt(e.target.value, 10))}
+                onChange={e => handlePositionChange('x', parseInt(e.target.value, 10))}
                 className="w-full"
               />
             </div>
@@ -243,7 +221,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
                 min="0"
                 max="100"
                 value={position.y}
-                onChange={(e) => handlePositionChange('y', parseInt(e.target.value, 10))}
+                onChange={e => handlePositionChange('y', parseInt(e.target.value, 10))}
                 className="w-full"
               />
             </div>
@@ -252,11 +230,11 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
         {/* Preview */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Preview
-          </label>
-          <div className="border border-gray-300 rounded-md p-4 bg-gray-50 h-20 flex items-center
-                        justify-center">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
+          <div
+            className="border border-gray-300 rounded-md p-4 bg-gray-50 h-20 flex items-center
+                        justify-center"
+          >
             <div
               style={{
                 fontFamily: getFontFamily(style.fontFamily),

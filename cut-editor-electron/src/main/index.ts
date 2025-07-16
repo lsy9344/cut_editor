@@ -12,15 +12,7 @@ import { DevToolsService } from './services/devTools';
 devReloadManager.init({
   hardResetMethod: 'exit',
   watchRendererSrc: true,
-  ignore: [
-    /node_modules/,
-    /\.git/,
-    /dist\/renderer/,
-    /coverage/,
-    /\.DS_Store/,
-    /\.env/,
-    /\.log$/,
-  ],
+  ignore: [/node_modules/, /\.git/, /dist\/renderer/, /coverage/, /\.DS_Store/, /\.env/, /\.log$/],
 });
 
 class CutEditorApp {

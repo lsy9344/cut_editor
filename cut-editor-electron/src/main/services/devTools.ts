@@ -47,8 +47,10 @@ export class DevToolsService {
       /* eslint-disable @typescript-eslint/no-require-imports */
       /* eslint-disable @typescript-eslint/no-var-requires */
       /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-      const { default: installExtension, REACT_DEVELOPER_TOOLS } =
-        require('electron-devtools-installer');
+      const {
+        default: installExtension,
+        REACT_DEVELOPER_TOOLS,
+      } = require('electron-devtools-installer');
 
       /* eslint-disable @typescript-eslint/no-unsafe-call */
       /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -79,8 +81,7 @@ export class DevToolsService {
   private setupDevKeyboards(window: BrowserWindow): void {
     window.webContents.on('before-input-event', (_event, input) => {
       // Toggle DevTools with F12 or Cmd+Option+I
-      if (input.key === 'F12' ||
-          (input.key === 'I' && input.meta && input.alt)) {
+      if (input.key === 'F12' || (input.key === 'I' && input.meta && input.alt)) {
         if (window.webContents.isDevToolsOpened()) {
           window.webContents.closeDevTools();
         } else {

@@ -22,11 +22,7 @@ export const ImageCanvas: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    state,
-    addImageToSlot,
-    setSelectedSlot,
-  } = useFrame();
+  const { state, addImageToSlot, setSelectedSlot } = useFrame();
   const { currentFrame, frameData, selectedSlot } = state;
 
   const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
@@ -342,7 +338,7 @@ export const ImageCanvas: React.FC = () => {
     if (!canvas || !frameData || !currentFrame) return;
 
     // Add all texts to canvas
-    Object.keys(frameData.texts).forEach((slotId) => {
+    Object.keys(frameData.texts).forEach(slotId => {
       const textData = frameData.texts[slotId];
       if (textData) {
         addTextToCanvas(textData, slotId);
