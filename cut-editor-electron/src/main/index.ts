@@ -11,8 +11,11 @@ class CutEditorApp {
   constructor() {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     this.setupAppSecurity();
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     if (!app.requestSingleInstanceLock()) {
@@ -30,6 +33,9 @@ class CutEditorApp {
     });
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -136,6 +142,10 @@ class CutEditorApp {
       void this.mainWindow.loadURL('http://localhost:3000');
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+      this.mainWindow.webContents.openDevTools();
+>>>>>>> Stashed changes
 =======
       this.mainWindow.webContents.openDevTools();
 >>>>>>> Stashed changes
