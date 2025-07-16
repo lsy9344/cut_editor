@@ -84,7 +84,6 @@ module.exports = (env, argv) => {
     }),
     new webpack.ProvidePlugin({
       global: 'globalThis',
-      process: 'process/browser',
       Buffer: ['buffer', 'Buffer'],
     }),
     // Additional global polyfill for Fabric.js
@@ -103,7 +102,7 @@ module.exports = (env, argv) => {
   ],
   devServer: {
     port: 3000,
-    hot: false,
+    hot: true,
     historyApiFallback: true,
     client: {
       logging: 'warn',

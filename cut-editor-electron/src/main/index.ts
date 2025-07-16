@@ -121,8 +121,8 @@ class CutEditorApp {
     this.mainWindow = new BrowserWindow({
       ...windowSettings,
       webPreferences: {
-        contextIsolation: true,
-        nodeIntegration: false,
+        nodeIntegration: true,
+        contextIsolation: false,
         preload: path.join(__dirname, '../preload/index.js'),
         sandbox: false,
         webSecurity: true,
@@ -146,22 +146,7 @@ class CutEditorApp {
     // Load the renderer
     if (this.isDevelopment) {
       void this.mainWindow.loadURL('http://localhost:3000');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-      this.mainWindow.webContents.openDevTools();
->>>>>>> Stashed changes
-=======
-      this.mainWindow.webContents.openDevTools();
->>>>>>> Stashed changes
-=======
-      this.mainWindow.webContents.openDevTools();
->>>>>>> Stashed changes
-=======
-      this.mainWindow.webContents.openDevTools();
->>>>>>> Stashed changes
+      this.mainWindow.webContents.openDevTools(); // 개발자 도구를 열도록 코드를 유지합니다.
     } else {
       void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
     }
