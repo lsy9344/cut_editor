@@ -29,9 +29,29 @@ const electronAPI = {
 // Expose the API to the renderer process
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
+// Type for file data returned by file operations
+interface FileData {
+  name: string;
+  path: string;
+  data: string;
+  size: number;
+}
+
 // Type declaration for the exposed API
 declare global {
   interface Window {
-    electronAPI?: typeof electronAPI;
+    electronAPI?: {
+      getAppConfig: () => Promise<{
+        isDevelopment: boolean;
+        appName: string;
+        appVersion: string;
+      }>;
+      closeWindow: () => Promise<void>;
+      minimizeWindow: () => Promise<void>;
+      maximizeWindow: () => Promise<void>;
+      openFile: () => Promise<FileData[] | null>;
+      saveFile: (data: unknown) => Promise<string | null>;
+      exportImage: (imageData: unknown) => Promise<string | null>;
+    };
   }
 }

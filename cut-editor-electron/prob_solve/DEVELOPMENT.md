@@ -1,5 +1,7 @@
 # Cut Editor - Development Guide
 
+> **⚠️ 문제 해결 가이드**: 흰색 화면 문제가 발생할 경우 [`electron_white_screen_comprehensive_fix.md`](./electron_white_screen_comprehensive_fix.md)를 참조하세요.
+
 ## 🚀 Quick Start
 
 ```bash

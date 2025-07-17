@@ -101,8 +101,10 @@ if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
   ],
   devServer: {
     port: 3000,
+    host: 'localhost',
     hot: true,
     historyApiFallback: true,
+    allowedHosts: 'all',
     client: {
       logging: 'warn',
       overlay: {
@@ -110,9 +112,7 @@ if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
         warnings: false,
       },
     },
-    headers: {
-      "Content-Security-Policy": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
-    },
+    // CSP headers are handled by the main process to avoid conflicts
   },
   devtool: isDevelopment ? 'eval-source-map' : 'source-map',
   node: {

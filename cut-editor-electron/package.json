@@ -8,7 +8,7 @@
     "dev:main": "webpack --config webpack.main.config.js --mode development --watch",
     "dev:preload": "webpack --config webpack.preload.config.js --mode development --watch",
     "dev:renderer": "webpack serve --config webpack.renderer.config.js --mode development --hot",
-    "dev:electron": "wait-on dist/main/index.js dist/preload/index.js http://localhost:3000 && nodemon --exec electron . --watch dist/main --watch dist/preload --ext js --delay 500ms",
+    "dev:electron": "wait-on dist/main/index.js dist/preload/index.js http://localhost:3000/index.html --timeout 30000 && sleep 3 && nodemon --exec electron . --watch dist/main --watch dist/preload --ext js --delay 2000ms",
     "dev:reload": "nodemon --exec \"electron . --inspect=5858\" --watch dist/main --watch dist/preload --ext js --delay 1000ms",
     "build": "npm run build:main && npm run build:preload && npm run build:renderer",
     "build:main": "webpack --config webpack.main.config.js --mode production",
