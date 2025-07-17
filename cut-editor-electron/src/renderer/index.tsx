@@ -9,9 +9,9 @@ const TestApp: React.FC = () => {
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
       <h1 style={{ color: '#2563eb' }}>🎉 React is Working!</h1>
       <p>Cut Editor renderer with React is functioning correctly.</p>
-      
+
       <div style={{ margin: '20px 0' }}>
-        <button 
+        <button
           onClick={() => setCount(count + 1)}
           style={{
             padding: '10px 20px',
@@ -20,13 +20,13 @@ const TestApp: React.FC = () => {
             color: 'white',
             border: 'none',
             borderRadius: '5px',
-            cursor: 'pointer'
+            cursor: 'pointer',
           }}
         >
           Clicked {count} times
         </button>
       </div>
-      
+
       <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px' }}>
         <strong>Status:</strong>
         <ul style={{ textAlign: 'left', margin: '10px 0' }}>
@@ -44,10 +44,12 @@ const TestApp: React.FC = () => {
 const initApp = () => {
   const container = document.getElementById('root');
   if (!container) {
+    // eslint-disable-next-line no-console
     console.error('❌ Root element not found');
     return;
   }
-  
+
+  // eslint-disable-next-line no-console
   console.log('🚀 Mounting React app...');
   const root = createRoot(container);
   root.render(<TestApp />);

@@ -77,3 +77,39 @@ export interface FrameData {
 }
 
 export type FrameType = '2-frame' | '4-frame' | '6-frame' | '9-frame';
+
+// Multi-select functionality types
+export type SelectionMode = 'single' | 'multi';
+
+export interface DropPlanItem {
+  slotId: string;
+  imageFile?: File;
+  imageUrl?: string;
+  status: 'pending' | 'processing' | 'completed' | 'error';
+  sequenceNumber: number;
+  errorMessage?: string;
+}
+
+export interface MultiSelectState {
+  selectedSlots: string[];
+  selectionMode: SelectionMode;
+  isMultiSelecting: boolean;
+  dropPlan: DropPlanItem[];
+  isExecutingPlan: boolean;
+}
+
+export interface BatchDropResult {
+  success: boolean;
+  completed: number;
+  total: number;
+  errors: Array<{
+    slotId: string;
+    error: string;
+  }>;
+}
+
+export interface SlotSelection {
+  slotId: string;
+  isSelected: boolean;
+  sequenceNumber?: number;
+}

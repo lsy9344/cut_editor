@@ -7,15 +7,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ appConfig }) => {
   const handleMinimize = () => {
-    void window.electronAPI.minimizeWindow();
+    void window.electronAPI?.minimizeWindow();
   };
 
   const handleMaximize = () => {
-    void window.electronAPI.maximizeWindow();
+    void window.electronAPI?.maximizeWindow();
   };
 
   const handleClose = () => {
-    void window.electronAPI.closeWindow();
+    void window.electronAPI?.closeWindow();
   };
 
   return (

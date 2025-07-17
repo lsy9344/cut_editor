@@ -6,6 +6,7 @@ import { FrameProvider } from './context/FrameContext';
 export const App: React.FC = () => {
   const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
@@ -39,14 +40,8 @@ export const App: React.FC = () => {
         // eslint-disable-next-line no-console
         console.error('Failed to initialize app:', error);
         const errorMsg = error instanceof Error ? error.message : String(error);
-        setDebugInfo(`IPC Error: ${errorMsg} - using fallback`);
-
-        // Use fallback config if IPC fails
-        setAppConfig({
-          isDevelopment: true,
-          appName: 'Cut Editor',
-          appVersion: '1.0.0',
-        });
+        setError(errorMsg);
+        setDebugInfo(`IPC Error: ${errorMsg}`);
       } finally {
         setIsLoading(false);
       }
@@ -67,6 +62,24 @@ export const App: React.FC = () => {
           {debugInfo && (
             <div className="mt-4 p-2 bg-gray-100 rounded text-xs text-gray-500 max-w-md">
               {debugInfo}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Failed to Initialize App</h1>
+          <p className="text-gray-600 mb-4">
+            Unable to connect to the main process. Please try restarting the application.
+          </p>
+          {debugInfo && (
+            <div className="mt-4 p-3 bg-gray-100 rounded text-sm text-left">
+              <strong>Debug info:</strong> {debugInfo}
             </div>
           )}
         </div>

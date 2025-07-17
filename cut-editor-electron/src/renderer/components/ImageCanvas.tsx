@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import { useFrame } from '../context/FrameContext';
+import { useMultiSelect } from '../hooks/useMultiSelect';
 import { ImageFile, TextData } from '@shared/types';
 import { getFontFamily } from '../utils/fontManager';
 
@@ -22,8 +23,9 @@ export const ImageCanvas: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { state, addImageToSlot, setSelectedSlot } = useFrame();
+  const { state, addImageToSlot, setSelectedSlot, executeBatchDrop } = useFrame();
   const { currentFrame, frameData, selectedSlot } = state;
+  const { selectedSlots, selectionMode, toggleSlotSelection, isSlotSelected } = useMultiSelect();
 
   const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
     canvas.forEachObject((obj: FabricObjectWithData) => {
@@ -37,6 +39,25 @@ export const ImageCanvas: React.FC = () => {
     });
     canvas.renderAll();
   }, []);
+
+  const highlightSelectedSlots = useCallback(
+    (canvas: fabric.Canvas) => {
+      canvas.forEachObject((obj: FabricObjectWithData) => {
+        if (obj.data?.type === 'slot') {
+          const slotId = obj.data.slotId;
+          if (slotId && isSlotSelected(slotId)) {
+            obj.set({ stroke: '#10b981', strokeWidth: 3, fill: '#ecfdf5' });
+          } else if (slotId === selectedSlot) {
+            obj.set({ stroke: '#3b82f6', strokeWidth: 3, fill: '#f3f4f6' });
+          } else {
+            obj.set({ stroke: '#d1d5db', strokeWidth: 2, fill: '#f3f4f6' });
+          }
+        }
+      });
+      canvas.renderAll();
+    },
+    [isSlotSelected, selectedSlot],
+  );
 
   const drawFrameSlots = useCallback((canvas: fabric.Canvas, frame: typeof currentFrame) => {
     if (!frame) return;
@@ -80,9 +101,12 @@ export const ImageCanvas: React.FC = () => {
     (canvas: fabric.Canvas, slotId: string | null) => {
       canvas.forEachObject((obj: FabricObjectWithData) => {
         if (obj.data?.type === 'slot') {
-          if (obj.data.slotId === slotId) {
+          const objSlotId = obj.data.slotId;
+          if (objSlotId === slotId) {
             obj.set({ fill: '#dbeafe', stroke: '#3b82f6', strokeWidth: 3 });
-          } else if (obj.data.slotId === selectedSlot) {
+          } else if (objSlotId && isSlotSelected(objSlotId)) {
+            obj.set({ fill: '#ecfdf5', stroke: '#10b981', strokeWidth: 3 });
+          } else if (objSlotId === selectedSlot) {
             obj.set({ fill: '#f3f4f6', stroke: '#3b82f6', strokeWidth: 3 });
           } else {
             obj.set({ fill: '#f3f4f6', stroke: '#d1d5db', strokeWidth: 2 });
@@ -91,7 +115,7 @@ export const ImageCanvas: React.FC = () => {
       });
       canvas.renderAll();
     },
-    [selectedSlot],
+    [selectedSlot, isSlotSelected],
   );
 
   const getSlotAtPosition = useCallback(
@@ -114,13 +138,23 @@ export const ImageCanvas: React.FC = () => {
         if (target?.data?.type === 'slot') {
           const slotId = target.data.slotId;
           if (slotId) {
-            setSelectedSlot(slotId);
-            highlightSlot(canvas, slotId);
+            const isCtrlPressed =
+              (options.e as KeyboardEvent).ctrlKey || (options.e as KeyboardEvent).metaKey;
+
+            if (selectionMode === 'multi' && isCtrlPressed) {
+              // Multi-select mode with Ctrl key
+              toggleSlotSelection(slotId);
+              highlightSelectedSlots(canvas);
+            } else {
+              // Single select mode or single click without Ctrl
+              setSelectedSlot(slotId);
+              highlightSlot(canvas, slotId);
+            }
           }
         }
       });
     },
-    [setSelectedSlot, highlightSlot],
+    [setSelectedSlot, highlightSlot, selectionMode, toggleSlotSelection, highlightSelectedSlots],
   );
 
   useEffect(() => {
@@ -418,19 +452,6 @@ export const ImageCanvas: React.FC = () => {
       const canvas = fabricCanvasRef.current;
       if (!canvas) return;
 
-      // Get drop position relative to canvas
-      const rect = canvas.getElement().getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      // Auto-detect target slot based on drop position
-      const targetSlot = getSlotAtPosition(x, y);
-
-      if (!targetSlot) {
-        setError('Please drop the image directly onto a slot area');
-        return;
-      }
-
       const files = Array.from(e.dataTransfer?.files ?? []);
       const imageFiles = files.filter(file => file.type.startsWith('image/'));
 
@@ -439,14 +460,63 @@ export const ImageCanvas: React.FC = () => {
         return;
       }
 
-      const firstFile = imageFiles[0];
-      if (firstFile) {
-        setSelectedSlot(targetSlot);
-        highlightSlot(canvas, targetSlot);
-        await processImageFile(firstFile, targetSlot);
+      // Check if we have multiple selected slots for batch operation
+      if (selectedSlots.length > 1 && selectionMode === 'multi') {
+        // Batch drop onto multiple selected slots
+        setIsLoading(true);
+        setError(null);
+
+        try {
+          const result = await executeBatchDrop(imageFiles, selectedSlots);
+
+          if (!result.success) {
+            const errorMsg =
+              result.errors.length > 0
+                ? `Failed to process ${result.errors.length} images: ${result.errors
+                    .map(e => e.error)
+                    .join(', ')}`
+                : 'Failed to process some images';
+            setError(errorMsg);
+          }
+
+          highlightSelectedSlots(canvas);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to process batch drop');
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // Single drop or fallback to position-based drop
+        const rect = canvas.getElement().getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Auto-detect target slot based on drop position
+        const targetSlot = getSlotAtPosition(x, y);
+
+        if (!targetSlot) {
+          setError('Please drop the image directly onto a slot area');
+          return;
+        }
+
+        const firstFile = imageFiles[0];
+        if (firstFile) {
+          setSelectedSlot(targetSlot);
+          highlightSlot(canvas, targetSlot);
+          await processImageFile(firstFile, targetSlot);
+        }
       }
     },
-    [getSlotAtPosition, processImageFile, setSelectedSlot, highlightSlot],
+    [
+      getSlotAtPosition,
+      processImageFile,
+      setSelectedSlot,
+      highlightSlot,
+      selectedSlots,
+      selectionMode,
+      executeBatchDrop,
+      highlightSelectedSlots,
+    ],
   );
 
   const handleCanvasClick = useCallback(async () => {
@@ -459,7 +529,7 @@ export const ImageCanvas: React.FC = () => {
     setError(null);
 
     try {
-      const fileData = (await window.electronAPI.openFile()) as ImageFile[] | null;
+      const fileData = (await window.electronAPI?.openFile()) as ImageFile[] | null;
       if (fileData && fileData.length > 0) {
         const imageData = fileData[0];
         if (imageData) {
