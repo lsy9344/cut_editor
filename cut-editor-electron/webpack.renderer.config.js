@@ -88,14 +88,13 @@ module.exports = (env, argv) => {
     }),
     // Additional global polyfill for Fabric.js
     new webpack.BannerPlugin({
-      banner: `
-        if (typeof global === 'undefined') {
-          var global = globalThis;
-        }
-        if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
-          window.global = window;
-        }
-      `,
+      banner: `// Global polyfill for Fabric.js compatibility
+if (typeof global === 'undefined') {
+  var global = globalThis;
+}
+if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
+  window.global = window;
+}`,
       raw: true,
       entryOnly: false,
     }),

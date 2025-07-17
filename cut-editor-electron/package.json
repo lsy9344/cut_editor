@@ -14,7 +14,7 @@
     "build:main": "webpack --config webpack.main.config.js --mode production",
     "build:preload": "webpack --config webpack.preload.config.js --mode production",
     "build:renderer": "webpack --config webpack.renderer.config.js --mode production",
-    "start": "electron .",
+    "start": "NODE_ENV=production electron .",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts,.tsx --fix",

@@ -9,23 +9,16 @@ class CutEditorApp {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
   constructor() {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
+    // 앱 보안 관련 설정을 먼저 적용합니다.
     this.setupAppSecurity();
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+    // 앱이 중복 실행되는 것을 방지합니다.
     if (!app.requestSingleInstanceLock()) {
       app.quit();
       return;
     }
 
+    // 두 번째 인스턴스가 실행될 때 기존 창을 활성화합니다.
     app.on('second-instance', () => {
       if (this.mainWindow) {
         if (this.mainWindow.isMinimized()) {
@@ -35,16 +28,7 @@ class CutEditorApp {
       }
     });
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+    // 나머지 이벤트 핸들러들을 설정합니다.
     this.setupEventHandlers();
   }
 
@@ -121,8 +105,8 @@ class CutEditorApp {
     this.mainWindow = new BrowserWindow({
       ...windowSettings,
       webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
+        nodeIntegration: false,
+        contextIsolation: true,
         preload: path.join(__dirname, '../preload/index.js'),
         sandbox: false,
         webSecurity: true,
@@ -138,14 +122,26 @@ class CutEditorApp {
       ...(this.isDevelopment ? {} : { icon: path.join(__dirname, '../../assets/icon.png') }),
     });
 
-    // Setup development tools if in development mode
-    if (this.isDevelopment) {
-      this.mainWindow.webContents.openDevTools();
-    }
+    // Set Content Security Policy - very permissive for debugging
+    this.mainWindow.webContents.session.webRequest.onHeadersReceived((_, callback) => {
+      callback({
+        responseHeaders: {
+          'Content-Security-Policy': [
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http://localhost:3000 ws://localhost:3000;" +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3000;" +
+              "style-src 'self' 'unsafe-inline' http://localhost:3000;" +
+              "font-src 'self' data: http://localhost:3000;" +
+              "img-src 'self' data: blob: http://localhost:3000;" +
+              "connect-src 'self' http://localhost:3000 ws://localhost:3000;",
+          ],
+        },
+      });
+    });
 
     // Load the renderer
     if (this.isDevelopment) {
-      void this.mainWindow.loadURL('http://localhost:3000');
+      // Temporarily use local file instead of dev server to avoid download dialog
+      void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
       this.mainWindow.webContents.openDevTools(); // 개발자 도구를 열도록 코드를 유지합니다.
     } else {
       void this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));

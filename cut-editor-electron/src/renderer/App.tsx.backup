@@ -13,13 +13,7 @@ export const App: React.FC = () => {
       try {
         // Debug: Check if electronAPI is available
         if (typeof window.electronAPI === 'undefined') {
-          // If electronAPI is not available, use fallback config
-          setDebugInfo('electronAPI not available - using fallback config');
-          setAppConfig({
-            isDevelopment: true,
-            appName: 'Cut Editor',
-            appVersion: '1.0.0',
-          });
+          setDebugInfo('electronAPI is not available');
           setIsLoading(false);
           return;
         }
@@ -29,24 +23,16 @@ export const App: React.FC = () => {
         // Add timeout to prevent hanging
         const configPromise = window.electronAPI.getAppConfig();
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('IPC timeout after 3 seconds')), 3000);
+          setTimeout(() => reject(new Error('IPC timeout after 2 seconds')), 2000);
         });
 
         const config = (await Promise.race([configPromise, timeoutPromise])) as AppConfig;
         setAppConfig(config);
-        setDebugInfo('App config loaded successfully via IPC');
+        setDebugInfo('App config loaded successfully');
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to initialize app:', error);
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        setDebugInfo(`IPC Error: ${errorMsg} - using fallback`);
-
-        // Use fallback config if IPC fails
-        setAppConfig({
-          isDevelopment: true,
-          appName: 'Cut Editor',
-          appVersion: '1.0.0',
-        });
+        setDebugInfo(`Error: ${error instanceof Error ? error.message : String(error)}`);
       } finally {
         setIsLoading(false);
       }

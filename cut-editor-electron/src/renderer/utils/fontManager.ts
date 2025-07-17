@@ -1,3 +1,5 @@
+import koreanFont from '../assets/fonts/korean-font.ttf';
+
 /**
  * Font Management System
  * Handles font loading and provides font face declarations for text rendering
@@ -13,7 +15,7 @@ export interface FontConfig {
 export const AVAILABLE_FONTS: FontConfig[] = [
   {
     name: 'Korean',
-    path: './assets/fonts/korean-font.ttf',
+    path: koreanFont as string,
     weight: 'normal',
     style: 'normal',
   },
@@ -31,7 +33,12 @@ export const AVAILABLE_FONTS: FontConfig[] = [
   },
 ];
 
-export const DEFAULT_FONT: FontConfig = AVAILABLE_FONTS[0]!; // Korean font as default
+export const DEFAULT_FONT: FontConfig = {
+  name: 'Korean',
+  path: koreanFont as string,
+  weight: 'normal',
+  style: 'normal',
+};
 
 /**
  * Load custom fonts for use in the application
@@ -39,7 +46,11 @@ export const DEFAULT_FONT: FontConfig = AVAILABLE_FONTS[0]!; // Korean font as d
 export const loadFonts = async (): Promise<void> => {
   try {
     for (const font of AVAILABLE_FONTS) {
-      if (font.path.startsWith('./assets/')) {
+      if (
+        font.path.startsWith('http') ||
+        font.path.startsWith('file://') ||
+        font.path.startsWith('/')
+      ) {
         const fontFace = new FontFace(font.name, `url("${font.path}")`, {
           weight: font.weight ?? 'normal',
           style: font.style ?? 'normal',
@@ -76,7 +87,11 @@ export const isFontLoaded = (fontName: string): boolean => {
  */
 export const preloadFonts = (): void => {
   AVAILABLE_FONTS.forEach(font => {
-    if (font.path.startsWith('./assets/')) {
+    if (
+      font.path.startsWith('http') ||
+      font.path.startsWith('file://') ||
+      font.path.startsWith('/')
+    ) {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.href = font.path;

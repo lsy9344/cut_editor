@@ -32,6 +32,6 @@ contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 // Type declaration for the exposed API
 declare global {
   interface Window {
-    electronAPI: typeof electronAPI;
+    electronAPI?: typeof electronAPI;
   }
 }
