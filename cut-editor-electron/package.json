@@ -4,7 +4,7 @@
   "description": "Cut Editor - Electron Migration",
   "main": "dist/main/index.js",
   "scripts": {
-    "dev": "concurrently --kill-others --names \"MAIN,PRELOAD,RENDERER,ELECTRON\" --prefix-colors \"yellow,cyan,green,blue\" \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev": "npm run build && concurrently --kill-others --names \"MAIN,PRELOAD,RENDERER,ELECTRON\" --prefix-colors \"yellow,cyan,green,blue\" \"npm run dev:main\" \"npm run dev:preload\" \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:main": "webpack --config webpack.main.config.js --mode development --watch",
     "dev:preload": "webpack --config webpack.preload.config.js --mode development --watch",
     "dev:renderer": "webpack serve --config webpack.renderer.config.js --mode development --hot",
@@ -49,7 +49,6 @@
     "concurrently": "^8.2.0",
     "css-loader": "^6.8.0",
     "electron": "^25.0.0",
-    "electron-devtools-installer": "^4.0.0",
     "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",

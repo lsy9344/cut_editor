@@ -2,10 +2,12 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { APP_CONFIG, IPC_CHANNELS } from '@shared/constants';
+import { DevToolsService } from './services/devTools';
 
 class CutEditorApp {
   private mainWindow: BrowserWindow | null = null;
-  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isDevelopment = process.env.NODE_ENV !== 'production';
+  private devToolsService = DevToolsService.getInstance();
 
   constructor() {
     // 앱 보안 관련 설정을 먼저 적용합니다.
@@ -45,7 +47,7 @@ class CutEditorApp {
 
   private setupEventHandlers(): void {
     void app.whenReady().then(() => {
-      this.createMainWindow();
+      void this.createMainWindow();
     });
 
     app.on('window-all-closed', () => {
@@ -56,7 +58,7 @@ class CutEditorApp {
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
-        this.createMainWindow();
+        void this.createMainWindow();
       }
     });
 
@@ -89,7 +91,7 @@ class CutEditorApp {
     this.setupIpcHandlers();
   }
 
-  private createMainWindow(): void {
+  private async createMainWindow(): Promise<void> {
     // eslint-disable-next-line no-console
     console.log('🛠️  Creating main window...');
     // eslint-disable-next-line no-console
@@ -100,7 +102,7 @@ class CutEditorApp {
     this.mainWindow = new BrowserWindow({
       width: 1200,
       height: 800,
-      show: false, // 로딩 완료 후 표시
+      show: true, // 즉시 표시
       webPreferences: {
         preload: path.join(__dirname, '../preload/index.js'),
         contextIsolation: true,
@@ -110,60 +112,73 @@ class CutEditorApp {
       },
     });
 
-    // Configure CSP for development
-    this.mainWindow.webContents.session.webRequest.onHeadersReceived((_, callback) => {
-      callback({
-        responseHeaders: {
-          'Content-Security-Policy': [
-            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http://localhost:3000 ws://localhost:3000;" +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3000;" +
-              "style-src 'self' 'unsafe-inline' http://localhost:3000;" +
-              "connect-src 'self' http://localhost:3000 ws://localhost:3000;",
-          ],
-        },
-      });
+    // DISABLE CSP temporarily for debugging
+    // this.mainWindow.webContents.session.webRequest.onHeadersReceived((_, callback) => {
+    //   callback({
+    //     responseHeaders: {
+    //       'Content-Security-Policy': [
+    //         "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http://localhost:3000 ws://localhost:3000;" +
+    //           "script-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:3000;" +
+    //           "style-src 'self' 'unsafe-inline' http://localhost:3000;" +
+    //           "connect-src 'self' http://localhost:3000 ws://localhost:3000;",
+    //       ],
+    //     },
+    //   });
+    // });
+
+    // UNIFIED SOLUTION: Staged Loading Strategy
+    // Stage 1: Always load built files first (prevents download popup)
+    // Stage 2: Enhance with dev server in development (prevents white screen)
+
+    const rendererIndexPath = path.join(__dirname, '../renderer/index.html');
+
+    // eslint-disable-next-line no-console
+    console.log('🚀 Stage 1: Loading built files for immediate UI');
+
+    try {
+      await this.mainWindow.loadFile(rendererIndexPath);
+      // eslint-disable-next-line no-console
+      console.log('✅ Built files loaded successfully');
+
+      // Stage 2: Development enhancement (non-blocking)
+      if (this.isDevelopment) {
+        this.enhanceWithDevServer();
+        // Setup modern development tools
+        void this.devToolsService.setupDevTools(this.mainWindow);
+        // Dev. tool active
+        this.mainWindow?.webContents.openDevTools({ mode: 'detach' });
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Built files failed to load:', error);
+
+      // Last resort fallback to dev server
+      if (this.isDevelopment) {
+        await this.loadDevServerFallback();
+      }
+    }
+
+    // Enhanced debugging for renderer process
+    this.mainWindow.webContents.on('console-message', (_, level, message) => {
+      // eslint-disable-next-line no-console
+      console.log(`📱 RENDERER [${level}]:`, message);
     });
 
-    // Load the renderer
-    if (this.isDevelopment) {
-      // In development, prioritize built files for faster loading
-      const rendererIndexPath = path.join(__dirname, '../renderer/index.html');
-      const devServerUrl = 'http://localhost:3000';
-      
+    this.mainWindow.webContents.on('dom-ready', () => {
       // eslint-disable-next-line no-console
-      console.log('🚀 Development mode: Loading built files first for faster startup');
-      
-      // First, try to load built files immediately
-      const loadRenderer = async () => {
-        try {
-          await this.mainWindow?.loadFile(rendererIndexPath);
-          // eslint-disable-next-line no-console
-          console.log('✅ Built files loaded successfully');
-        } catch (error) {
-          // If built files fail, try dev server with quick timeout
-          // eslint-disable-next-line no-console
-          console.log('⚠️  Built files not found, trying dev server...');
-          
-          try {
-            await this.mainWindow?.loadURL(devServerUrl);
-            // eslint-disable-next-line no-console
-            console.log('✅ Development server loaded successfully');
-          } catch (devError) {
-            // eslint-disable-next-line no-console
-            console.error('❌ Both built files and dev server failed:', devError);
-          }
+      console.log('🏗️  DOM is ready - HTML parsed and loaded');
+
+      // Check if scripts are loading
+      this.mainWindow.webContents.executeJavaScript(`
+        console.log('🔍 Checking script loading...');
+        console.log('📄 Document ready state:', document.readyState);
+        console.log('🎯 Root element:', document.getElementById('root'));
+        console.log('📝 All scripts:', document.scripts.length);
+        for(let i = 0; i < document.scripts.length; i++) {
+          console.log('📜 Script', i, ':', document.scripts[i].src || 'inline');
         }
-      };
-      
-      void loadRenderer();
-      this.mainWindow.webContents.openDevTools();
-    } else {
-      // In production, load from built files
-      const rendererIndexPath = path.join(__dirname, '../renderer/index.html');
-      // eslint-disable-next-line no-console
-      console.log('📦 Loading production build from:', rendererIndexPath);
-      void this.mainWindow.loadFile(rendererIndexPath);
-    }
+      `).catch(err => console.error('Script execution failed:', err));
+    });
 
     // Show window when ready to prevent download popup
     this.mainWindow.webContents.once('did-finish-load', () => {
@@ -174,8 +189,17 @@ class CutEditorApp {
       }
     });
 
+    // DEBUGGING: Force show window after timeout as fallback
+    setTimeout(() => {
+      if (this.mainWindow && !this.mainWindow.isVisible()) {
+        // eslint-disable-next-line no-console
+        console.log('⚠️  DEBUGGING: Force showing window after 3 seconds');
+        this.mainWindow.show();
+      }
+    }, 3000);
+
     // Handle loading failures
-    this.mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    this.mainWindow.webContents.on('did-fail-load', (_, errorCode, errorDescription) => {
       // eslint-disable-next-line no-console
       console.error('❌ Page failed to load:', errorCode, errorDescription);
       if (this.mainWindow) {
@@ -188,6 +212,62 @@ class CutEditorApp {
     });
   }
 
+  private enhanceWithDevServer(): void {
+    // Non-blocking dev server connection for development features
+    // eslint-disable-next-line no-console
+    console.log('🔄 Stage 2: Checking dev server availability...');
+
+    setTimeout(() => {
+      void (async () => {
+        try {
+          const response = await fetch('http://localhost:3000');
+          if (response.ok && response.status === 200) {
+            // eslint-disable-next-line no-console
+            console.log('🎯 Dev server ready and responding properly');
+            // DO NOT transition to dev server automatically - this causes download popup
+            // Instead, just log that it's available for manual refresh if needed
+            // eslint-disable-next-line no-console
+            console.log(
+              'ℹ️  Dev server available at http://localhost:3000 (manual refresh if needed)',
+            );
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log('ℹ️  Dev server not available, continuing with built files');
+        }
+      })();
+    }, 1000); // Allow built files to render first
+  }
+
+  private async loadDevServerFallback(): Promise<void> {
+    // eslint-disable-next-line no-console
+    console.log('⚠️  Fallback: Checking dev server before attempting connection');
+
+    try {
+      // First, verify dev server is actually responding
+      const response = await fetch('http://localhost:3000');
+      if (response.ok && response.status === 200) {
+        // eslint-disable-next-line no-console
+        console.log('✅ Dev server verified and available');
+        // REMOVED: loadURL causes download popup - user can manually refresh if needed
+        // eslint-disable-next-line no-console
+        console.log('ℹ️  Built files continue to be used (prevents download popup)');
+      } else {
+        throw new Error(`Dev server responded with status: ${response.status}`);
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Dev server fallback failed:', error);
+      // eslint-disable-next-line no-console
+      console.log('❌ All loading methods failed - showing window with built files');
+
+      // Show window anyway to prevent hanging
+      if (this.mainWindow) {
+        this.mainWindow.show();
+      }
+    }
+  }
+
   private handleProcessCrash(): void {
     // eslint-disable-next-line no-console
     console.log('Handling process crash - attempting recovery');
@@ -197,7 +277,7 @@ class CutEditorApp {
       this.mainWindow.webContents.reload();
     } else {
       // 창이 없다면 새로 생성
-      this.createMainWindow();
+      void this.createMainWindow();
     }
   }
 
@@ -210,18 +290,19 @@ class CutEditorApp {
       this.mainWindow.webContents.reload();
     } else {
       // 창 자체가 파괴되었다면 새로 생성
-      this.createMainWindow();
+      void this.createMainWindow();
     }
   }
 
   private setupIpcHandlers(): void {
-    // Window controls
-    ipcMain.handle(IPC_CHANNELS.WINDOW_READY, () => ({
+    // App configuration
+    ipcMain.handle(IPC_CHANNELS.APP_CONFIG, () => ({
       isDevelopment: this.isDevelopment,
       appName: APP_CONFIG.APP_NAME,
       appVersion: APP_CONFIG.APP_VERSION,
     }));
 
+    // Window controls
     ipcMain.handle(IPC_CHANNELS.WINDOW_CLOSE, () => {
       this.mainWindow?.close();
     });

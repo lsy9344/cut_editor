@@ -2,6 +2,7 @@ import React from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { ImageCanvas } from './ImageCanvas';
+import { RenderingVerification } from './RenderingVerification';
 import { AppConfig } from '@shared/types';
 
 interface LayoutProps {
@@ -17,5 +18,7 @@ export const Layout: React.FC<LayoutProps> = ({ appConfig }) => (
         <ImageCanvas />
       </main>
     </div>
+    {/* Show verification panel in development */}
+    {appConfig.isDevelopment && <RenderingVerification />}
   </div>
 );

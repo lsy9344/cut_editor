@@ -9,6 +9,7 @@ export const APP_CONFIG = {
 
 export const IPC_CHANNELS = {
   WINDOW_READY: 'window-ready',
+  APP_CONFIG: 'app-config',
   WINDOW_CLOSE: 'window-close',
   WINDOW_MINIMIZE: 'window-minimize',
   WINDOW_MAXIMIZE: 'window-maximize',
