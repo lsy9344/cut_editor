@@ -21,11 +21,12 @@ import {
   DEFAULT_EXPORT_SETTINGS,
   INITIAL_UI_STATE,
 } from '../../shared/types';
+import { FRAME_TEMPLATES } from '../../shared/constants/frameTemplates';
 
 // Initial application state
 const initialState: AppState = {
   currentFrame: null,
-  availableFrames: [],
+  availableFrames: FRAME_TEMPLATES,
   imageSlots: {},
   textSettings: DEFAULT_TEXT_SETTINGS,
   exportSettings: DEFAULT_EXPORT_SETTINGS,

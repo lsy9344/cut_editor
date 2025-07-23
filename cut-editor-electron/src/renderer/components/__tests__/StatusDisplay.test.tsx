@@ -27,12 +27,7 @@ describe('StatusDisplay', () => {
   });
 
   it('displays error message', () => {
-    render(
-      <StatusDisplay
-        {...defaultProps}
-        error="Test error message"
-      />
-    );
+    render(<StatusDisplay {...defaultProps} error="Test error message" />);
 
     expect(screen.getByText('Test error message')).toBeInTheDocument();
     expect(screen.getByText('Error')).toBeInTheDocument();
@@ -67,27 +62,18 @@ describe('StatusDisplay', () => {
   });
 
   it('displays default loading message when none provided', () => {
-    render(
-      <StatusDisplay
-        {...defaultProps}
-        isLoading={true}
-      />
-    );
+    render(<StatusDisplay {...defaultProps} isLoading={true} />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
   it('displays export progress', () => {
     render(
-      <StatusDisplay
-        {...defaultProps}
-        isExporting={true}
-        exportProgress={45}
-      />
+      <StatusDisplay {...defaultProps} isExporting={true} exportProgress={45} />
     );
 
     expect(screen.getByText('Exporting... 45%')).toBeInTheDocument();
-    
+
     const progressBar = screen.getByRole('progressbar');
     expect(progressBar).toHaveAttribute('aria-valuenow', '45');
   });

@@ -14,9 +14,7 @@ const Sidebar: React.FC<SidebarProps> = memo(({ children, className = '' }) => {
       aria-label="Control panel"
     >
       <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-6">
-          {children}
-        </div>
+        <div className="p-4 space-y-6">{children}</div>
       </div>
     </div>
   );

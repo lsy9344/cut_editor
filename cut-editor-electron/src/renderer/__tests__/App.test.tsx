@@ -17,17 +17,17 @@ describe('App Component', () => {
   it('renders the header with version', () => {
     render(<App />);
 
-    expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+    expect(screen.getByText('v2.0.0')).toBeInTheDocument();
     expect(screen.getByText('Ready')).toBeInTheDocument();
   });
 
-  it('renders placeholder sidebar content', () => {
+  it('renders sidebar control sections', () => {
     render(<App />);
 
-    expect(screen.getByText('Frame Templates')).toBeInTheDocument();
-    expect(screen.getByText('Image Upload')).toBeInTheDocument();
-    expect(screen.getByText('Text Editor')).toBeInTheDocument();
-    expect(screen.getByText('Controls')).toBeInTheDocument();
+    expect(screen.getByText('Frame Layout')).toBeInTheDocument();
+    expect(screen.getByText('Upload Image')).toBeInTheDocument();
+    expect(screen.getByText('Text Settings')).toBeInTheDocument();
+    expect(screen.getByText('Actions')).toBeInTheDocument();
   });
 
   it('renders empty canvas state', () => {

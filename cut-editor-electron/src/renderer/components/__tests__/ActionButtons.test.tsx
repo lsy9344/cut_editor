@@ -53,10 +53,12 @@ describe('ActionButtons', () => {
 
   it('requires confirmation for reset selected', () => {
     const onResetSelected = jest.fn();
-    render(<ActionButtons {...defaultProps} onResetSelected={onResetSelected} />);
+    render(
+      <ActionButtons {...defaultProps} onResetSelected={onResetSelected} />
+    );
 
     const resetButton = screen.getByText('Reset Selected Image');
-    
+
     // First click - shows confirmation
     fireEvent.click(resetButton);
     expect(screen.getByText('Click again to confirm')).toBeInTheDocument();
@@ -72,7 +74,7 @@ describe('ActionButtons', () => {
     render(<ActionButtons {...defaultProps} onReset={onReset} />);
 
     const resetButton = screen.getByText('Reset All');
-    
+
     // First click - shows confirmation
     fireEvent.click(resetButton);
     expect(screen.getByText('Click again to confirm')).toBeInTheDocument();
@@ -87,22 +89,18 @@ describe('ActionButtons', () => {
     render(<ActionButtons {...defaultProps} isLoading={true} />);
 
     expect(screen.getByText('Applying...')).toBeInTheDocument();
-    
+
     const applyButton = screen.getByText('Applying...');
     expect(applyButton).toBeDisabled();
   });
 
   it('shows export progress', () => {
     render(
-      <ActionButtons
-        {...defaultProps}
-        isExporting={true}
-        exportProgress={75}
-      />
+      <ActionButtons {...defaultProps} isExporting={true} exportProgress={75} />
     );
 
     expect(screen.getByText('Exporting... 75%')).toBeInTheDocument();
-    
+
     const progressBar = screen.getByRole('progressbar');
     expect(progressBar).toHaveAttribute('aria-valuenow', '75');
   });
@@ -127,7 +125,7 @@ describe('ActionButtons', () => {
 
   it('auto-hides confirmation after timeout', async () => {
     jest.useFakeTimers();
-    
+
     render(<ActionButtons {...defaultProps} />);
 
     const resetButton = screen.getByText('Reset All');
@@ -139,7 +137,9 @@ describe('ActionButtons', () => {
     jest.advanceTimersByTime(3000);
 
     await waitFor(() => {
-      expect(screen.queryByText('Click again to confirm')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Click again to confirm')
+      ).not.toBeInTheDocument();
     });
 
     jest.useRealTimers();

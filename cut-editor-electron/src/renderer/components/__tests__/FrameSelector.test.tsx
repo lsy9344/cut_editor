@@ -83,14 +83,11 @@ describe('FrameSelector', () => {
 
   it('handles frame selection', () => {
     const onFrameSelect = jest.fn();
-    render(
-      <FrameSelector
-        {...defaultProps}
-        onFrameSelect={onFrameSelect}
-      />
-    );
+    render(<FrameSelector {...defaultProps} onFrameSelect={onFrameSelect} />);
 
-    const frameButton = screen.getByLabelText('Select 2 Panel Horizontal layout with 2 slots');
+    const frameButton = screen.getByLabelText(
+      'Select 2 Panel Horizontal layout with 2 slots'
+    );
     fireEvent.click(frameButton);
 
     expect(onFrameSelect).toHaveBeenCalledWith(mockFrames[0]);
@@ -98,26 +95,22 @@ describe('FrameSelector', () => {
 
   it('shows selected frame with visual indicator', () => {
     render(
-      <FrameSelector
-        {...defaultProps}
-        currentFrame={mockFrames[0] ?? null}
-      />
+      <FrameSelector {...defaultProps} currentFrame={mockFrames[0] ?? null} />
     );
 
-    const frameButton = screen.getByLabelText('Select 2 Panel Horizontal layout with 2 slots');
+    const frameButton = screen.getByLabelText(
+      'Select 2 Panel Horizontal layout with 2 slots'
+    );
     expect(frameButton).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('supports keyboard navigation', () => {
     const onFrameSelect = jest.fn();
-    render(
-      <FrameSelector
-        {...defaultProps}
-        onFrameSelect={onFrameSelect}
-      />
-    );
+    render(<FrameSelector {...defaultProps} onFrameSelect={onFrameSelect} />);
 
-    const frameButton = screen.getByLabelText('Select 2 Panel Horizontal layout with 2 slots');
+    const frameButton = screen.getByLabelText(
+      'Select 2 Panel Horizontal layout with 2 slots'
+    );
     fireEvent.keyDown(frameButton, { key: 'Enter' });
 
     expect(onFrameSelect).toHaveBeenCalledWith(mockFrames[0]);
@@ -125,24 +118,18 @@ describe('FrameSelector', () => {
 
   it('displays slot count for selected frame', () => {
     render(
-      <FrameSelector
-        {...defaultProps}
-        currentFrame={mockFrames[0] ?? null}
-      />
+      <FrameSelector {...defaultProps} currentFrame={mockFrames[0] ?? null} />
     );
 
     expect(screen.getByText('2 slots')).toBeInTheDocument();
   });
 
   it('shows empty state when no frames available', () => {
-    render(
-      <FrameSelector
-        {...defaultProps}
-        availableFrames={[]}
-      />
-    );
+    render(<FrameSelector {...defaultProps} availableFrames={[]} />);
 
-    expect(screen.getByText('No frame templates available')).toBeInTheDocument();
+    expect(
+      screen.getByText('No frame templates available')
+    ).toBeInTheDocument();
   });
 
   it('disables interaction when loading', () => {

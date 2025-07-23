@@ -12,7 +12,7 @@ export interface FileValidationResult {
 // Supported image formats
 export const SUPPORTED_IMAGE_FORMATS = [
   'image/jpeg',
-  'image/jpg', 
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/gif',
@@ -45,7 +45,11 @@ export function validateImageFile(file: File): FileValidationResult {
   }
 
   // Check file type
-  if (!SUPPORTED_IMAGE_FORMATS.includes(file.type as typeof SUPPORTED_IMAGE_FORMATS[number])) {
+  if (
+    !SUPPORTED_IMAGE_FORMATS.includes(
+      file.type as (typeof SUPPORTED_IMAGE_FORMATS)[number]
+    )
+  ) {
     return {
       isValid: false,
       error: `Unsupported file format. Please use: ${SUPPORTED_IMAGE_EXTENSIONS.join(', ')}`,
@@ -72,7 +76,9 @@ export function validateImageFile(file: File): FileValidationResult {
 /**
  * Validates image dimensions after loading
  */
-export function validateImageDimensions(image: HTMLImageElement): FileValidationResult {
+export function validateImageDimensions(
+  image: HTMLImageElement
+): FileValidationResult {
   const { width, height } = image;
 
   // Check minimum dimensions
@@ -94,7 +100,8 @@ export function validateImageDimensions(image: HTMLImageElement): FileValidation
   // Check for potential quality issues with very small images
   const result: FileValidationResult = { isValid: true };
   if (width < 500 || height < 500) {
-    result.warning = 'Image resolution is quite low. Consider using a higher resolution image for better quality.';
+    result.warning =
+      'Image resolution is quite low. Consider using a higher resolution image for better quality.';
   }
 
   return result;
@@ -116,7 +123,7 @@ export function validateImageFiles(files: FileList | File[]): {
 
   for (const file of fileArray) {
     const result = validateImageFile(file);
-    
+
     if (result.isValid) {
       validFiles.push(file);
       if (result.warning) {
@@ -146,7 +153,7 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
     }
 
     const image = new Image();
-    
+
     image.onload = (): void => {
       // Validate dimensions after loading
       const dimensionValidation = validateImageDimensions(image);
@@ -169,7 +176,7 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
     // Clean up object URL after loading
     image.onload = (): void => {
       URL.revokeObjectURL(objectUrl);
-      
+
       // Validate dimensions after loading
       const dimensionValidation = validateImageDimensions(image);
       if (!dimensionValidation.isValid) {
@@ -187,11 +194,11 @@ export function loadImageFromFile(file: File): Promise<HTMLImageElement> {
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
-  
+
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i] ?? 'B'}`;
 }
 
@@ -202,11 +209,11 @@ export function getFileErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   if (typeof error === 'string') {
     return error;
   }
-  
+
   return 'An unknown error occurred while processing the file.';
 }
 
@@ -215,9 +222,13 @@ export function getFileErrorMessage(error: unknown): string {
  */
 export function hasValidImageFiles(event: DragEvent): boolean {
   if (!event.dataTransfer?.files) return false;
-  
+
   const files = Array.from(event.dataTransfer.files);
-  return files.some(file => SUPPORTED_IMAGE_FORMATS.includes(file.type as typeof SUPPORTED_IMAGE_FORMATS[number]));
+  return files.some(file =>
+    SUPPORTED_IMAGE_FORMATS.includes(
+      file.type as (typeof SUPPORTED_IMAGE_FORMATS)[number]
+    )
+  );
 }
 
 /**
@@ -225,7 +236,11 @@ export function hasValidImageFiles(event: DragEvent): boolean {
  */
 export function getValidImageFilesFromDrag(event: DragEvent): File[] {
   if (!event.dataTransfer?.files) return [];
-  
+
   const files = Array.from(event.dataTransfer.files);
-  return files.filter(file => SUPPORTED_IMAGE_FORMATS.includes(file.type as typeof SUPPORTED_IMAGE_FORMATS[number]));
+  return files.filter(file =>
+    SUPPORTED_IMAGE_FORMATS.includes(
+      file.type as (typeof SUPPORTED_IMAGE_FORMATS)[number]
+    )
+  );
 }

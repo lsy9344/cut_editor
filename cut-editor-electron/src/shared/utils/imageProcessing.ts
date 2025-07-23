@@ -15,18 +15,14 @@ export function createImageThumbnail(
 ): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  
+
   if (!ctx) {
     throw new Error('Could not get 2D context for thumbnail canvas');
   }
 
   // Calculate scaled dimensions maintaining aspect ratio
-  const { width: scaledWidth, height: scaledHeight } = calculateScaledDimensions(
-    image.width,
-    image.height,
-    maxWidth,
-    maxHeight
-  );
+  const { width: scaledWidth, height: scaledHeight } =
+    calculateScaledDimensions(image.width, image.height, maxWidth, maxHeight);
 
   canvas.width = scaledWidth;
   canvas.height = scaledHeight;
@@ -80,7 +76,7 @@ export function calculateBestFitScale(
 ): number {
   const scaleX = slotWidth / imageWidth;
   const scaleY = slotHeight / imageHeight;
-  
+
   // Use the smaller scale to ensure the image fits within the slot
   return Math.min(scaleX, scaleY);
 }
@@ -210,9 +206,9 @@ export function exportCanvasToBlob(
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-    
+
     canvas.toBlob(
-      (blob) => {
+      blob => {
         if (blob) {
           resolve(blob);
         } else {
@@ -231,15 +227,15 @@ export function exportCanvasToBlob(
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  
+
   link.href = url;
   link.download = filename;
   link.style.display = 'none';
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   // Clean up the object URL
   URL.revokeObjectURL(url);
 }
@@ -251,11 +247,12 @@ export function generateExportFilename(
   format: 'png' | 'jpeg',
   prefix = 'cut-editor'
 ): string {
-  const timestamp = new Date().toISOString()
+  const timestamp = new Date()
+    .toISOString()
     .replace(/[:.]/g, '-')
     .replace('T', '_')
     .split('.')[0];
-  
+
   return `${prefix}_${timestamp ?? 'unknown'}.${format}`;
 }
 
@@ -275,7 +272,10 @@ export function validateExportSettings(settings: ExportSettings): {
   }
 
   // Check quality for JPEG
-  if (settings.format === 'jpeg' && (settings.quality < 0 || settings.quality > 100)) {
+  if (
+    settings.format === 'jpeg' &&
+    (settings.quality < 0 || settings.quality > 100)
+  ) {
     return {
       isValid: false,
       error: 'JPEG quality must be between 0 and 100',
@@ -303,7 +303,7 @@ export function calculateExportDimensions(
   baseDpi = 72
 ): { width: number; height: number } {
   const scaleFactor = targetDpi / baseDpi;
-  
+
   return {
     width: Math.round(baseWidth * scaleFactor),
     height: Math.round(baseHeight * scaleFactor),
@@ -320,7 +320,7 @@ export function withProgress<T>(
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     let currentStep = 0;
-    
+
     const updateProgress = (): void => {
       currentStep++;
       onProgress((currentStep / steps) * 100);
@@ -330,12 +330,12 @@ export function withProgress<T>(
     const progressInterval = setInterval(updateProgress, 50);
 
     operation()
-      .then((result) => {
+      .then(result => {
         clearInterval(progressInterval);
         onProgress(100);
         resolve(result);
       })
-      .catch((error) => {
+      .catch(error => {
         clearInterval(progressInterval);
         reject(error);
       });

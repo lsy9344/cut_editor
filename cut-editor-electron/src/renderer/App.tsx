@@ -5,9 +5,18 @@
 
 import React from 'react';
 import { AppProvider, useAppState, useAppActions } from './context/AppContext';
-import Header from './components/Header';
-import Layout from './components/Layout';
-import ImageCanvas from './components/ImageCanvas';
+import {
+  Header,
+  Layout,
+  ImageCanvas,
+  Sidebar,
+  FrameSelector,
+  ImageUploader,
+  TextEditor,
+  ActionButtons,
+  StatusDisplay,
+  ErrorBoundary,
+} from './components';
 
 // Main app content component (wrapped by AppProvider)
 const AppContent: React.FC = () => {
@@ -15,8 +24,8 @@ const AppContent: React.FC = () => {
   const actions = useAppActions();
 
   return (
-    <>
-      <Header title="Cut Editor" version="1.0.0" />
+    <ErrorBoundary>
+      <Header title="Cut Editor" version="2.0.0" />
       <Layout>
         <ImageCanvas
           frame={state.currentFrame}
@@ -27,46 +36,58 @@ const AppContent: React.FC = () => {
           onImageScaleChange={actions.updateImageScale}
         />
 
-        {/* Placeholder for sidebar components */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Frame Templates
-            </h3>
-            <p className="text-sm text-gray-600">
-              Frame selector will be implemented here
-            </p>
+        <Sidebar>
+          <div className="space-y-6">
+            <StatusDisplay
+              error={state.uiState.error}
+              loadingMessage={state.uiState.loadingMessage}
+              isLoading={state.uiState.isLoading}
+              isExporting={state.uiState.isExporting}
+              exportProgress={state.uiState.exportProgress}
+              onClearError={() => actions.setError(null)}
+            />
+            <FrameSelector
+              availableFrames={state.availableFrames}
+              currentFrame={state.currentFrame}
+              onFrameSelect={actions.selectFrame}
+              isLoading={state.uiState.isLoading}
+            />
+            <ImageUploader
+              selectedSlotId={state.uiState.selectedSlotId}
+              onImageUpload={(slotId: string, file: File) => {
+                // Create HTMLImageElement from File
+                const img = new Image();
+                img.onload = () => {
+                  actions.loadImageToSlot(slotId, file, img);
+                };
+                img.src = URL.createObjectURL(file);
+              }}
+              isLoading={state.uiState.isLoading}
+            />
+            <TextEditor
+              textSettings={state.textSettings}
+              onTextUpdate={actions.updateTextSettings}
+              isLoading={state.uiState.isLoading}
+            />
+            <ActionButtons
+              onReset={actions.resetAll}
+              onResetSelected={actions.resetSelectedImage}
+              onApplyText={() => {
+                // Apply text functionality will be implemented in Phase 3
+                console.log('Apply text clicked');
+              }}
+              onExport={() => {
+                // Export functionality will be implemented in Phase 3
+                console.log('Export clicked');
+              }}
+              isLoading={state.uiState.isLoading}
+              isExporting={state.uiState.isExporting}
+              exportProgress={state.uiState.exportProgress}
+            />
           </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Image Upload
-            </h3>
-            <p className="text-sm text-gray-600">
-              Image uploader will be implemented here
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Text Editor
-            </h3>
-            <p className="text-sm text-gray-600">
-              Text editor will be implemented here
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Controls
-            </h3>
-            <p className="text-sm text-gray-600">
-              Scale and action controls will be implemented here
-            </p>
-          </div>
-        </div>
+        </Sidebar>
       </Layout>
-    </>
+    </ErrorBoundary>
   );
 };
 
