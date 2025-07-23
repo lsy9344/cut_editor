@@ -1,287 +1,297 @@
-import React, { useCallback, useState } from 'react';
-import { TextData, TextStyle } from '@shared/types';
-import { AVAILABLE_FONTS, DEFAULT_FONT, getFontFamily } from '../utils/fontManager';
+/**
+ * Cut Editor - Text Editor Component
+ * Text content input with font controls and styling options
+ */
 
-interface TextEditorProps {
-  slotId: string;
-  initialText?: TextData | undefined;
-  onTextAdd: (slotId: string, text: TextData) => void;
-  onTextUpdate: (slotId: string, text: TextData) => void;
-  onTextRemove: (slotId: string) => void;
-  onClose: () => void;
-}
+import React, { memo, useCallback, useState, useRef, useEffect } from 'react';
+import { TextEditorProps } from '../../shared/types';
 
-const DEFAULT_TEXT_STYLE: TextStyle = {
-  fontFamily: DEFAULT_FONT.name,
-  fontSize: 24,
-  color: '#000000',
-  textAlign: 'center',
-  fontWeight: 'normal',
-  fontStyle: 'normal',
-};
-
-export const TextEditor: React.FC<TextEditorProps> = ({
-  slotId,
-  initialText,
-  onTextAdd,
+const TextEditor: React.FC<TextEditorProps> = memo(({
+  textSettings,
   onTextUpdate,
-  onTextRemove,
-  onClose,
+  isLoading,
 }) => {
-  const [text, setText] = useState(initialText?.text ?? '');
-  const [style, setStyle] = useState<TextStyle>(initialText?.style ?? DEFAULT_TEXT_STYLE);
-  const [position, setPosition] = useState({
-    x: initialText?.x ?? 50,
-    y: initialText?.y ?? 50,
-  });
+  const [localContent, setLocalContent] = useState(textSettings.content);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
 
-  const handleStyleChange = useCallback(
-    <K extends keyof TextStyle>(key: K, value: TextStyle[K]) => {
-      setStyle(prev => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
+  // Sync local content with props
+  useEffect(() => {
+    setLocalContent(textSettings.content);
+  }, [textSettings.content]);
 
-  const handlePositionChange = useCallback((axis: 'x' | 'y', value: number) => {
-    setPosition(prev => ({ ...prev, [axis]: value }));
-  }, []);
-
-  const handleSave = useCallback(() => {
-    if (!text.trim()) {
-      return;
-    }
-
-    const textData: TextData = {
-      id: initialText?.id ?? `text-${Date.now()}`,
-      text: text.trim(),
-      x: position.x,
-      y: position.y,
-      style,
+  // Close color picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        colorPickerRef.current &&
+        !colorPickerRef.current.contains(event.target as Node)
+      ) {
+        setIsColorPickerOpen(false);
+      }
     };
 
-    if (initialText) {
-      onTextUpdate(slotId, textData);
-    } else {
-      onTextAdd(slotId, textData);
+    if (isColorPickerOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+    return undefined;
+  }, [isColorPickerOpen]);
 
-    onClose();
-  }, [text, position, style, slotId, initialText, onTextAdd, onTextUpdate, onClose]);
+  // Handle text content change with debouncing
+  const handleContentChange = useCallback(
+    (value: string) => {
+      setLocalContent(value);
+      // Debounce the update to avoid too many state changes
+      const timeoutId = setTimeout(() => {
+        onTextUpdate({ content: value });
+      }, 300);
 
-  const handleRemove = useCallback(() => {
-    if (initialText) {
-      onTextRemove(slotId);
-    }
-    onClose();
-  }, [slotId, initialText, onTextRemove, onClose]);
+      return () => clearTimeout(timeoutId);
+    },
+    [onTextUpdate]
+  );
+
+  // Handle font size change
+  const handleFontSizeChange = useCallback(
+    (value: number) => {
+      const clampedValue = Math.max(8, Math.min(72, value));
+      onTextUpdate({ fontSize: clampedValue });
+    },
+    [onTextUpdate]
+  );
+
+  // Handle color change
+  const handleColorChange = useCallback(
+    (color: string) => {
+      onTextUpdate({ color });
+      setIsColorPickerOpen(false);
+    },
+    [onTextUpdate]
+  );
+
+  // Handle italic toggle
+  const handleItalicToggle = useCallback(() => {
+    onTextUpdate({ isItalic: !textSettings.isItalic });
+  }, [onTextUpdate, textSettings.isItalic]);
+
+  // Handle font family change
+  const handleFontFamilyChange = useCallback(
+    (fontFamily: string) => {
+      onTextUpdate({ fontFamily });
+    },
+    [onTextUpdate]
+  );
+
+  // Predefined colors
+  const predefinedColors = [
+    '#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff',
+    '#ffff00', '#ff00ff', '#00ffff', '#800000', '#008000',
+    '#000080', '#808080', '#ffa500', '#800080', '#008080',
+  ];
+
+  // Available fonts
+  const availableFonts = [
+    { value: 'Korean Font', label: 'Korean Font' },
+    { value: 'Arial', label: 'Arial' },
+    { value: 'Helvetica', label: 'Helvetica' },
+    { value: 'Times New Roman', label: 'Times New Roman' },
+    { value: 'Georgia', label: 'Georgia' },
+    { value: 'Verdana', label: 'Verdana' },
+  ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">{initialText ? 'Edit Text' : 'Add Text'}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl">
-            ×
-          </button>
-        </div>
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-gray-900">Text Settings</h3>
 
-        {/* Text Input */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Text Content</label>
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Enter your text here..."
-            className="w-full p-3 border border-gray-300 rounded-md resize-none h-20"
-            style={{ fontFamily: getFontFamily(style.fontFamily) }}
-          />
+      {/* Text Content */}
+      <div className="space-y-2">
+        <label htmlFor="text-content" className="block text-xs font-medium text-gray-700">
+          Text Content
+        </label>
+        <textarea
+          ref={textareaRef}
+          id="text-content"
+          value={localContent}
+          onChange={(e) => handleContentChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+          rows={3}
+          placeholder="Enter your text here..."
+          disabled={isLoading}
+        />
+        <div className="text-xs text-gray-500">
+          {localContent.length} characters
         </div>
+      </div>
 
-        {/* Font Settings */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Font Family</label>
-          <select
-            value={style.fontFamily}
-            onChange={e => handleStyleChange('fontFamily', e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md"
-          >
-            {AVAILABLE_FONTS.map(font => (
-              <option key={font.name} value={font.name}>
-                {font.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Font Family */}
+      <div className="space-y-2">
+        <label htmlFor="font-family" className="block text-xs font-medium text-gray-700">
+          Font Family
+        </label>
+        <select
+          id="font-family"
+          value={textSettings.fontFamily}
+          onChange={(e) => handleFontFamilyChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          disabled={isLoading}
+        >
+          {availableFonts.map((font) => (
+            <option key={font.value} value={font.value}>
+              {font.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {/* Font Size */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Font Size: {style.fontSize}px
-          </label>
+      {/* Font Size */}
+      <div className="space-y-2">
+        <label htmlFor="font-size" className="block text-xs font-medium text-gray-700">
+          Font Size: {textSettings.fontSize}px
+        </label>
+        <div className="flex items-center space-x-2">
           <input
+            id="font-size"
             type="range"
-            min="12"
+            min="8"
             max="72"
-            value={style.fontSize}
-            onChange={e => handleStyleChange('fontSize', parseInt(e.target.value, 10))}
-            className="w-full"
+            value={textSettings.fontSize}
+            onChange={(e) => handleFontSizeChange(parseInt(e.target.value, 10))}
+            className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
+          />
+          <input
+            type="number"
+            min="8"
+            max="72"
+            value={textSettings.fontSize}
+            onChange={(e) => handleFontSizeChange(parseInt(e.target.value, 10) || 12)}
+            className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={isLoading}
           />
         </div>
+      </div>
 
-        {/* Text Color */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="color"
-              value={style.color}
-              onChange={e => handleStyleChange('color', e.target.value)}
-              className="w-10 h-10 border border-gray-300 rounded"
-            />
-            <input
-              type="text"
-              value={style.color}
-              onChange={e => handleStyleChange('color', e.target.value)}
-              className="flex-1 p-2 border border-gray-300 rounded-md font-mono text-sm"
-              placeholder="#000000"
-            />
-          </div>
-        </div>
-
-        {/* Text Alignment */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Text Alignment</label>
-          <div className="flex space-x-2">
-            {(['left', 'center', 'right'] as const).map(align => (
-              <button
-                key={align}
-                onClick={() => handleStyleChange('textAlign', align)}
-                className={`px-3 py-2 text-sm rounded-md border ${
-                  style.textAlign === align
-                    ? 'bg-blue-500 text-white border-blue-500'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {align.charAt(0).toUpperCase() + align.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Font Style */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Font Style</label>
-          <div className="flex space-x-2">
-            <button
-              onClick={() =>
-                handleStyleChange('fontWeight', style.fontWeight === 'bold' ? 'normal' : 'bold')
-              }
-              className={`px-3 py-2 text-sm rounded-md border font-bold ${
-                style.fontWeight === 'bold'
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Bold
-            </button>
-            <button
-              onClick={() =>
-                handleStyleChange('fontStyle', style.fontStyle === 'italic' ? 'normal' : 'italic')
-              }
-              className={`px-3 py-2 text-sm rounded-md border italic ${
-                style.fontStyle === 'italic'
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              Italic
-            </button>
-          </div>
-        </div>
-
-        {/* Position Controls */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">X: {position.x}%</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={position.x}
-                onChange={e => handlePositionChange('x', parseInt(e.target.value, 10))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Y: {position.y}%</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={position.y}
-                onChange={e => handlePositionChange('y', parseInt(e.target.value, 10))}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Preview */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
-          <div
-            className="border border-gray-300 rounded-md p-4 bg-gray-50 h-20 flex items-center
-                        justify-center"
+      {/* Text Color */}
+      <div className="space-y-2">
+        <label className="block text-xs font-medium text-gray-700">
+          Text Color
+        </label>
+        <div className="relative" ref={colorPickerRef}>
+          <button
+            type="button"
+            onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+            className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={isLoading}
           >
             <div
+              className="w-5 h-5 rounded border border-gray-300"
+              style={{ backgroundColor: textSettings.color }}
+            />
+            <span className="text-sm text-gray-700">{textSettings.color}</span>
+            <svg
+              className={`w-4 h-4 text-gray-400 transition-transform ${
+                isColorPickerOpen ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Color Picker Dropdown */}
+          {isColorPickerOpen && (
+            <div className="absolute z-10 mt-1 p-3 bg-white border border-gray-300 rounded-md shadow-lg">
+              <div className="grid grid-cols-5 gap-2 mb-3">
+                {predefinedColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => handleColorChange(color)}
+                    className={`w-8 h-8 rounded border-2 hover:scale-110 transition-transform ${
+                      textSettings.color === color ? 'border-blue-500' : 'border-gray-300'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                ))}
+              </div>
+              
+              {/* Custom color input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-medium text-gray-700">
+                  Custom Color
+                </label>
+                <input
+                  type="color"
+                  value={textSettings.color}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Style Options */}
+      <div className="space-y-2">
+        <label className="block text-xs font-medium text-gray-700">
+          Style Options
+        </label>
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={handleItalicToggle}
+            className={`px-3 py-2 text-sm font-medium rounded-md border transition-colors ${
+              textSettings.isItalic
+                ? 'bg-blue-100 border-blue-300 text-blue-700'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+            disabled={isLoading}
+          >
+            <span className="italic">I</span> Italic
+          </button>
+        </div>
+      </div>
+
+      {/* Preview */}
+      {localContent && (
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-700">
+            Preview
+          </label>
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div
               style={{
-                fontFamily: getFontFamily(style.fontFamily),
-                fontSize: `${Math.min(style.fontSize, 18)}px`,
-                color: style.color,
-                textAlign: style.textAlign,
-                fontWeight: style.fontWeight,
-                fontStyle: style.fontStyle,
+                fontSize: `${textSettings.fontSize}px`,
+                fontFamily: textSettings.fontFamily,
+                color: textSettings.color,
+                fontStyle: textSettings.isItalic ? 'italic' : 'normal',
+                transform: textSettings.isItalic ? `skew(${-textSettings.shearAngle * 10}deg, 0)` : 'none',
+                lineHeight: 1.4,
+                wordBreak: 'break-word',
               }}
             >
-              {text || 'Preview text...'}
+              {localContent}
             </div>
           </div>
         </div>
+      )}
 
-        {/* Action Buttons */}
-        <div className="flex justify-between">
-          <div>
-            {initialText && (
-              <button
-                onClick={handleRemove}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600
-                          transition-colors"
-              >
-                Remove Text
-              </button>
-            )}
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400
-                        transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!text.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600
-                        disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {initialText ? 'Update' : 'Add'} Text
-            </button>
-          </div>
-        </div>
+      {/* Help Text */}
+      <div className="text-xs text-gray-500 space-y-1">
+        <p>• Text will be applied to all text positions in the frame</p>
+        <p>• Use "Apply Text" button to render text on the canvas</p>
+        <p>• Korean Font is optimized for Korean characters</p>
       </div>
     </div>
   );
-};
+});
+
+TextEditor.displayName = 'TextEditor';
+
+export default TextEditor;

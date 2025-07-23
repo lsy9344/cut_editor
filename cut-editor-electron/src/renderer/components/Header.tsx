@@ -1,61 +1,32 @@
-import React from 'react';
-import { AppConfig } from '@shared/types';
+/**
+ * Cut Editor - Header Component
+ * Application header with title and version display
+ */
 
-interface HeaderProps {
-  appConfig: AppConfig;
-}
+import React, { memo } from 'react';
+import { HeaderProps } from '../../shared/types';
 
-export const Header: React.FC<HeaderProps> = ({ appConfig }) => {
-  const handleMinimize = () => {
-    void window.electronAPI?.minimizeWindow();
-  };
-
-  const handleMaximize = () => {
-    void window.electronAPI?.maximizeWindow();
-  };
-
-  const handleClose = () => {
-    void window.electronAPI?.closeWindow();
-  };
-
+const Header: React.FC<HeaderProps> = memo(({ title, version }) => {
   return (
-    <header className="toolbar shadow-sm">
-      <div className="flex items-center flex-1">
-        <h1 className="text-lg font-semibold text-gray-900">{appConfig.appName}</h1>
-        {appConfig.isDevelopment && (
-          <span className="ml-2 text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">DEV</span>
-        )}
-      </div>
-
-      <div className="flex items-center space-x-4">
-        <button onClick={handleMinimize} className="btn btn-outline text-xs px-2 py-1">
-          New
-        </button>
-        <button onClick={handleMaximize} className="btn btn-outline text-xs px-2 py-1">
-          Open
-        </button>
-        <button onClick={handleClose} className="btn btn-primary text-xs px-2 py-1">
-          Export
-        </button>
-      </div>
-
-      <div className="flex items-center space-x-1 ml-4">
-        <button
-          onClick={handleMinimize}
-          className="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500 transition-colors"
-          title="Minimize"
-        />
-        <button
-          onClick={handleMaximize}
-          className="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500 transition-colors"
-          title="Maximize"
-        />
-        <button
-          onClick={handleClose}
-          className="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500 transition-colors"
-          title="Close"
-        />
+    <header className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              v{version}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <span className="text-sm text-gray-600">Ready</span>
+          </div>
+        </div>
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
+
+export default Header;

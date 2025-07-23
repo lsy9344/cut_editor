@@ -6,12 +6,12 @@ description: Synthesize a complete prompt by combining next.md with your argumen
 ## 🎯 PROMPT SYNTHESIZER
 
 You will create a **complete, ready-to-copy prompt** by combining:
-1. The next.md command template from /Users/sooyeol/Desktop/Code/cut_editor/commands/next.md
+1. The next.md command template from /Users/sooyeol/Desktop/Code/CutEditor/.claude/commands/next.md
 2. The specific task details provided here: $ARGUMENTS
 
 ### 📋 YOUR TASK:
 
-1. **READ** the next.md command file at `/Users/sooyeol/Desktop/Code/cut_editor/commands/next.md`
+1. **READ** the next.md command file at `/Users/sooyeol/Desktop/Code/CutEditor/.claude/commands/next.md`
 2. **EXTRACT** the core prompt structure and requirements
 3. **INTEGRATE** the user's arguments seamlessly into the prompt
 4. **OUTPUT** a complete prompt in a code block that can be easily copied

@@ -1,257 +1,196 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { fabric } from 'fabric';
-import { useFrame } from '../context/FrameContext';
-import { useMultiSelect } from '../hooks/useMultiSelect';
-import { ImageFile, TextData } from '@shared/types';
-import { getFontFamily } from '../utils/fontManager';
+/**
+ * Cut Editor - Image Canvas Component
+ * Left-side canvas area for image editing (basic structure, no Fabric.js yet)
+ */
 
-// Fabric.js object interfaces
-interface FabricObjectWithData extends fabric.Object {
-  data?: {
-    type: string;
-    slotId?: string;
-    textId?: string;
-  };
-}
+import React, { memo, useCallback, useMemo } from 'react';
+import { ImageCanvasProps } from '../../shared/types';
 
-export const ImageCanvas: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isCanvasReady, setIsCanvasReady] = useState(false);
-
-  const { state, addImageToSlot, setSelectedSlot, executeBatchDrop } = useFrame();
-  const { currentFrame, frameData, selectedSlot } = state;
-  const { selectedSlots, selectionMode, toggleSlotSelection, isSlotSelected } = useMultiSelect();
-
-  const highlightSlot = useCallback((canvas: fabric.Canvas, slotId: string) => {
-    canvas.forEachObject((obj: FabricObjectWithData) => {
-      if (obj.data?.type === 'slot') {
-        if (obj.data.slotId === slotId) {
-          // Enhanced visual feedback for selected slot
-          obj.set({
-            stroke: '#3b82f6',
-            strokeWidth: 4,
-            fill: '#dbeafe',
-            shadow: new fabric.Shadow({
-              color: '#3b82f6',
-              blur: 10,
-              offsetX: 0,
-              offsetY: 0,
-            }),
-          });
-        } else {
-          obj.set({
-            stroke: '#d1d5db',
-            strokeWidth: 2,
-            fill: '#f3f4f6',
-            shadow: undefined,
-          });
-        }
-      }
-    });
-    canvas.renderAll();
-  }, []);
-
-  const highlightSelectedSlots = useCallback(
-    (canvas: fabric.Canvas) => {
-      canvas.forEachObject((obj: FabricObjectWithData) => {
-        if (obj.data?.type === 'slot') {
-          const slotId = obj.data.slotId;
-          if (slotId && isSlotSelected(slotId)) {
-            obj.set({ stroke: '#10b981', strokeWidth: 3, fill: '#ecfdf5' });
-          } else if (slotId === selectedSlot) {
-            obj.set({ stroke: '#3b82f6', strokeWidth: 3, fill: '#f3f4f6' });
-          } else {
-            obj.set({ stroke: '#d1d5db', strokeWidth: 2, fill: '#f3f4f6' });
-          }
-        }
-      });
-      canvas.renderAll();
-    },
-    [isSlotSelected, selectedSlot],
-  );
-
-  const drawFrameSlots = useCallback((canvas: fabric.Canvas, frame: typeof currentFrame) => {
-    if (!frame) return;
-
-    frame.slots.forEach(slot => {
-      const slotRect = new fabric.Rect({
-        left: slot.x,
-        top: slot.y,
-        width: slot.width,
-        height: slot.height,
-        fill: '#f3f4f6',
-        stroke: '#d1d5db',
-        strokeWidth: 2,
-        selectable: false,
-        evented: true,
-        hoverCursor: 'pointer',
-        data: { type: 'slot', slotId: slot.id },
-      });
-
-      const slotLabel = new fabric.Text('Drop Image Here', {
-        left: slot.x + slot.width / 2,
-        top: slot.y + slot.height / 2,
-        fontSize: 16,
-        fontFamily: 'Arial',
-        fill: '#9ca3af',
-        textAlign: 'center',
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        evented: false,
-        data: { type: 'slotLabel', slotId: slot.id },
-      });
-
-      canvas.add(slotRect, slotLabel);
-    });
-
-    canvas.renderAll();
-  }, []);
-
-  const setupCanvasEvents = useCallback(
-    (canvas: fabric.Canvas) => {
-      canvas.on('mouse:down', (options: fabric.IEvent) => {
-        const target = options.target as FabricObjectWithData;
-        if (target?.data?.type === 'slot') {
-          const slotId = target.data.slotId;
-          if (slotId) {
-            const isCtrlPressed =
-              (options.e as KeyboardEvent).ctrlKey || (options.e as KeyboardEvent).metaKey;
-            if (selectionMode === 'multi' && isCtrlPressed) {
-              // Multi-select mode with Ctrl key
-              toggleSlotSelection(slotId);
-              highlightSelectedSlots(canvas);
-            } else {
-              // Single select mode or single click without Ctrl
-              setSelectedSlot(slotId);
-              highlightSlot(canvas, slotId);
-            }
-          }
-        }
-      });
-    },
-    [setSelectedSlot, highlightSlot, selectionMode, toggleSlotSelection, highlightSelectedSlots],
-  );
-
-  // Asynchronous Fabric.js initialization with error handling
-  useEffect(() => {
-    const initializeCanvas = async () => {
-      try {
-        console.log('🎨 Starting canvas initialization...');
-        setIsLoading(true);
-        setError(null);
-
-        const canvas = canvasRef.current;
-        if (!canvas) {
-          console.log('❌ Canvas ref not available');
-          return;
-        }
-
-        console.log('✅ Canvas element found, creating Fabric.js canvas...');
-
-        // Wrap Fabric.js initialization in setTimeout to make it async
-        await new Promise<void>((resolve, reject) => {
-          setTimeout(() => {
-            try {
-              const fabricCanvas = new fabric.Canvas(canvas, {
-                width: currentFrame?.canvasWidth ?? 800,
-                height: currentFrame?.canvasHeight ?? 600,
-                backgroundColor: '#ffffff',
-                selection: false,
-                preserveObjectStacking: true,
-              });
-
-              console.log('✅ Fabric.js canvas created successfully');
-              fabricCanvasRef.current = fabricCanvas;
-
-              if (currentFrame) {
-                console.log('🎯 Drawing frame slots...');
-                drawFrameSlots(fabricCanvas, currentFrame);
-              }
-
-              console.log('🎪 Setting up canvas events...');
-              setupCanvasEvents(fabricCanvas);
-
-              setIsCanvasReady(true);
-              console.log('🎉 Canvas initialization complete!');
-              resolve();
-            } catch (err) {
-              console.error('❌ Error creating Fabric.js canvas:', err);
-              reject(err);
-            }
-          }, 0);
-        });
-      } catch (err) {
-        console.error('❌ Canvas initialization failed:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize canvas');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void initializeCanvas();
-
-    return () => {
-      console.log('🧹 Cleaning up canvas...');
-      if (fabricCanvasRef.current) {
-        fabricCanvasRef.current.dispose();
-        fabricCanvasRef.current = null;
-      }
-      setIsCanvasReady(false);
-    };
-  }, [currentFrame, drawFrameSlots, setupCanvasEvents]);
-
-  // Show loading state while canvas initializes
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center w-full h-96 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-          <p className="text-gray-600 text-sm">Initializing Canvas...</p>
-        </div>
-      </div>
+const ImageCanvas: React.FC<ImageCanvasProps> = memo(
+  ({
+    frame,
+    imageSlots,
+    selectedSlotId,
+    onSlotClick,
+    // Note: onImagePositionChange and onImageScaleChange will be used in future phases
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onImagePositionChange,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onImageScaleChange,
+  }) => {
+    // Handle slot click events
+    const handleSlotClick = useCallback(
+      (slotId: string) => {
+        onSlotClick(slotId);
+      },
+      [onSlotClick]
     );
-  }
 
-  // Show error state if initialization failed
-  if (error) {
+    // Calculate canvas dimensions based on frame
+    const canvasDimensions = useMemo(() => {
+      if (!frame) {
+        return { width: 800, height: 600 };
+      }
+
+      // Scale frame dimensions to fit available space while maintaining aspect ratio
+      const maxWidth = 800;
+      const maxHeight = 600;
+      const aspectRatio = frame.dimensions.width / frame.dimensions.height;
+
+      let width = maxWidth;
+      let height = maxWidth / aspectRatio;
+
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = maxHeight * aspectRatio;
+      }
+
+      return { width: Math.floor(width), height: Math.floor(height) };
+    }, [frame]);
+
+    // Render empty state when no frame is selected
+    if (!frame) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <div className="w-24 h-24 mx-auto mb-4 bg-gray-300 rounded-lg flex items-center justify-center">
+              <svg
+                className="w-12 h-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              No Frame Selected
+            </h3>
+            <p className="text-sm text-gray-500">
+              Choose a frame template to start editing
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center justify-center w-full h-96 bg-red-50 border border-red-200 rounded-lg">
-        <div className="text-center">
-          <div className="text-red-600 text-xl mb-2">⚠️</div>
-          <h3 className="text-red-800 font-semibold mb-1">Canvas Error</h3>
-          <p className="text-red-600 text-sm mb-2">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+      <div className="w-full h-full flex items-center justify-center p-8 bg-gray-100">
+        {/* Canvas container */}
+        <div className="relative bg-white shadow-lg rounded-lg overflow-hidden">
+          {/* Frame background */}
+          <div
+            className="relative bg-white"
+            style={{
+              width: canvasDimensions.width,
+              height: canvasDimensions.height,
+            }}
           >
-            Reload App
-          </button>
+            {/* Frame template image if available */}
+            {frame.imagePath && (
+              <img
+                src={frame.imagePath}
+                alt={frame.name}
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                draggable={false}
+              />
+            )}
+
+            {/* Render frame slots */}
+            {frame.slots.map(slot => {
+              const imageSlot = imageSlots[slot.id];
+              const isSelected = selectedSlotId === slot.id;
+
+              // Scale slot bounds to canvas dimensions
+              const scaleX = canvasDimensions.width / frame.dimensions.width;
+              const scaleY = canvasDimensions.height / frame.dimensions.height;
+
+              const slotStyle = {
+                left: slot.bounds.x * scaleX,
+                top: slot.bounds.y * scaleY,
+                width: slot.bounds.width * scaleX,
+                height: slot.bounds.height * scaleY,
+              };
+
+              return (
+                <div
+                  key={slot.id}
+                  className={`absolute border-2 cursor-pointer transition-all duration-200 ${
+                    isSelected
+                      ? 'border-blue-500 bg-blue-50/30'
+                      : 'border-gray-300 hover:border-gray-400 bg-gray-50/30'
+                  }`}
+                  style={slotStyle}
+                  onClick={(): void => handleSlotClick(slot.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e): void => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSlotClick(slot.id);
+                    }
+                  }}
+                >
+                  {/* Render image if loaded */}
+                  {imageSlot?.image ? (
+                    <div className="w-full h-full overflow-hidden">
+                      <img
+                        src={imageSlot.image.src}
+                        alt="Loaded content"
+                        className="w-full h-full object-cover"
+                        style={{
+                          transform: `scale(${imageSlot.scale}) translate(${imageSlot.position.x}px, ${imageSlot.position.y}px)`,
+                          transformOrigin: 'center',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+                  ) : (
+                    /* Empty slot placeholder */
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <svg
+                          className="w-8 h-8 mx-auto mb-2 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        <p className="text-xs text-gray-500">Add Image</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selection indicator */}
+                  {isSelected && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Canvas info bar */}
+          <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded text-sm">
+            {frame.name} ({canvasDimensions.width} × {canvasDimensions.height})
+          </div>
         </div>
       </div>
     );
   }
+);
 
-  return (
-    <div
-      ref={containerRef}
-      className={`canvas-container relative ${isDragOver ? 'drag-over' : ''}`}
-    >
-      <canvas
-        ref={canvasRef}
-        className="border border-gray-300 rounded-lg shadow-sm"
-      />
-      {!isCanvasReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-75">
-          <p className="text-gray-600">Setting up canvas...</p>
-        </div>
-      )}
-    </div>
-  );
-};
+ImageCanvas.displayName = 'ImageCanvas';
+
+export default ImageCanvas;
