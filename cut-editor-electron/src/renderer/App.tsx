@@ -17,6 +17,30 @@ import {
   StatusDisplay,
   ErrorBoundary,
 } from './components';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
+// Create Material-UI theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2563eb', // Blue-600
+      light: '#3b82f6', // Blue-500
+      dark: '#1d4ed8', // Blue-700
+    },
+    secondary: {
+      main: '#7c3aed', // Violet-600
+      light: '#8b5cf6', // Violet-500
+      dark: '#6d28d9', // Violet-700
+    },
+  },
+  typography: {
+    fontFamily: '"-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+  },
+  shape: {
+    borderRadius: 8,
+  },
+});
 
 // Main app content component (wrapped by AppProvider)
 const AppContent: React.FC = () => {
@@ -94,9 +118,12 @@ const AppContent: React.FC = () => {
 // Root App component with Context Provider
 const App: React.FC = () => {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ThemeProvider>
   );
 };
 

@@ -6,9 +6,22 @@
 import React, { memo, useCallback, useState } from 'react';
 import { FrameSelectorProps, FrameTemplate } from '../../shared/types';
 
+// NOTE: Material-UI 컴포넌트를 사용하기 위해 필요한 import 구문들을 추가했습니다.
+import {
+  Typography,
+  Box,
+  useTheme,
+  alpha,
+  Button,
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+
 const FrameSelector: React.FC<FrameSelectorProps> = memo(
-  ({ availableFrames, currentFrame, onFrameSelect, isLoading }) => {
+  ({ availableFrames = [], currentFrame, onFrameSelect, isLoading }) => {
     const [hoveredFrame, setHoveredFrame] = useState<string | null>(null);
+    
+    // NOTE: MUI 테마의 색상, 그림자 등을 사용하기 위해 useTheme 훅을 추가했습니다.
+    const theme = useTheme();
 
     const handleFrameClick = useCallback(
       (frame: FrameTemplate) => {
@@ -41,7 +54,7 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
           width={scaledWidth}
           height={scaledHeight}
           viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-          className="border border-gray-300 rounded"
+          style={{ border: '1px solid #edacb1', borderRadius: '2px' }}
         >
           {/* Background */}
           <rect
@@ -75,8 +88,7 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
               y={slot.bounds.y + slot.bounds.height / 2}
               textAnchor="middle"
               dominantBaseline="central"
-              className="text-xs fill-gray-600"
-              fontSize="12"
+              style={{ fontSize: '12px', fill: '#4b5563'}}
             >
               {index + 1}
             </text>
@@ -89,7 +101,7 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
       return (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-gray-900">Frame Layout</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 gap-y-[200px] justify-items-center">
             {Array.from({ length: 8 }, (_, i) => (
               <div
                 key={i}
@@ -112,70 +124,109 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {availableFrames.map(frame => {
+        <div className="grid grid-cols-2 gap-3 gap-y-[20px] justify-items-center">
+          {(availableFrames || []).map(frame => {
             const isSelected = currentFrame?.id === frame.id;
             const isHovered = hoveredFrame === frame.id;
 
+            // Material-UI Button with proper color support
             return (
-              <button
+              <Button
                 key={frame.id}
-                type="button"
-                className={`
-                relative p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-50 shadow-md'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                }
-                ${isLoading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-              `}
+                variant={isSelected ? "contained" : "outlined"}
+                color={isSelected ? "primary" : "success"}
                 onClick={() => handleFrameClick(frame)}
-                onKeyDown={e => handleKeyDown(e, frame)}
+                onKeyDown={(e) => handleKeyDown(e, frame)}
                 onMouseEnter={() => setHoveredFrame(frame.id)}
                 onMouseLeave={() => setHoveredFrame(null)}
                 disabled={isLoading}
                 aria-label={`Select ${frame.name} layout with ${frame.slots.length} slots`}
                 aria-pressed={isSelected}
+                sx={{
+                  position: 'relative',
+                  padding: 2,
+                  borderRadius: 2,
+                  borderWidth: 2,
+                  transition: 'all 0.2s',
+                  textTransform: 'none',
+                  backgroundColor: isSelected 
+                    ? theme.palette.primary.main 
+                    : theme.palette.background.paper,
+                  borderColor: isSelected 
+                    ? theme.palette.primary.main 
+                    : theme.palette.success.main,
+                  '&:hover': {
+                    backgroundColor: isSelected 
+                      ? theme.palette.primary.dark 
+                      : alpha(theme.palette.success.main, 0.1),
+                    borderColor: isSelected 
+                      ? theme.palette.primary.dark 
+                      : theme.palette.success.dark,
+                    boxShadow: theme.shadows[2],
+                  },
+                  '&:focus': {
+                    outline: 'none',
+                    boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.5)}`,
+                  },
+                  '&.Mui-disabled': {
+                    cursor: 'not-allowed',
+                    opacity: 0.5,
+                  },
+                }}
               >
-                {/* Preview */}
-                <div className="flex justify-center mb-2">
-                  {generateFramePreview(frame)}
-                </div>
-
-                {/* Frame Name */}
-                <div className="text-xs text-center text-gray-700 font-medium">
-                  {frame.name}
-                </div>
-
-                {/* Selection Indicator */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    {generateFramePreview(frame)}
+                  </Box>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      textAlign: 'center', 
+                      color: isSelected ? 'white' : theme.palette.text.primary,
+                      fontWeight: 'medium',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {frame.name}
+                  </Typography>
+                </Box>
                 {isSelected && (
-                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full p-1">
-                    <svg
-                      className="w-3 h-3"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      backgroundColor: theme.palette.primary.main,
+                      color: 'white',
+                      borderRadius: '50%',
+                      padding: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <CheckCircleIcon sx={{ fontSize: 12 }} />
+                  </Box>
                 )}
-
-                {/* Hover Effect */}
                 {isHovered && !isSelected && (
-                  <div className="absolute inset-0 bg-gray-100 bg-opacity-50 rounded-lg" />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: alpha(theme.palette.grey[100], 0.5),
+                      borderRadius: 2,
+                    }}
+                  />
                 )}
-              </button>
+              </Button>
             );
           })}
         </div>
 
-        {availableFrames.length === 0 && (
+        {(!availableFrames || availableFrames.length === 0) && (
           <div className="text-center py-6 text-gray-500">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
