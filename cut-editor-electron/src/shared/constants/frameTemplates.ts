@@ -11,7 +11,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'horizontal_2',
     type: 'horizontal_2',
     name: '2 Panel Horizontal',
-    imagePath: '/assets/frames/horizontal_2.png',
     dimensions: { width: 800, height: 400 },
     slots: [
       {
@@ -32,7 +31,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'vertical_2',
     type: 'vertical_2',
     name: '2 Panel Vertical',
-    imagePath: '/assets/frames/vertical_2.png',
     dimensions: { width: 400, height: 800 },
     slots: [
       {
@@ -55,7 +53,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'horizontal_4',
     type: 'horizontal_4',
     name: '4 Panel Horizontal',
-    imagePath: '/assets/frames/horizontal_4.png',
     dimensions: { width: 800, height: 400 },
     slots: [
       {
@@ -88,7 +85,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'vertical_4',
     type: 'vertical_4',
     name: '4 Panel Vertical',
-    imagePath: '/assets/frames/vertical_4.png',
     dimensions: { width: 400, height: 800 },
     slots: [
       {
@@ -123,7 +119,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'horizontal_6',
     type: 'horizontal_6',
     name: '6 Panel Horizontal',
-    imagePath: '/assets/frames/horizontal_6.png',
     dimensions: { width: 900, height: 600 },
     slots: [
       {
@@ -168,7 +163,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'vertical_6',
     type: 'vertical_6',
     name: '6 Panel Vertical',
-    imagePath: '/assets/frames/vertical_6.png',
     dimensions: { width: 600, height: 900 },
     slots: [
       {
@@ -215,7 +209,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'horizontal_9',
     type: 'horizontal_9',
     name: '9 Panel Horizontal',
-    imagePath: '/assets/frames/horizontal_9.png',
     dimensions: { width: 900, height: 600 },
     slots: [
       {
@@ -278,7 +271,6 @@ export const FRAME_TEMPLATES: FrameTemplate[] = [
     id: 'vertical_9',
     type: 'vertical_9',
     name: '9 Panel Vertical',
-    imagePath: '/assets/frames/vertical_9.png',
     dimensions: { width: 600, height: 900 },
     slots: [
       {

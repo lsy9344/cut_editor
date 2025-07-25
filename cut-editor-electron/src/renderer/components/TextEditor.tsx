@@ -127,7 +127,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
             ref={textareaRef}
             id="text-content"
             value={localContent}
-            onChange={e => handleContentChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+              handleContentChange(e.target.value);
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             rows={3}
             placeholder="Enter your text here..."
@@ -149,7 +151,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
           <select
             id="font-family"
             value={textSettings.fontFamily}
-            onChange={e => handleFontFamilyChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>): void => {
+              handleFontFamilyChange(e.target.value);
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             disabled={isLoading}
           >
@@ -176,7 +180,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
               min="8"
               max="72"
               value={textSettings.fontSize}
-              onChange={e => handleFontSizeChange(parseInt(e.target.value, 10))}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
+                handleFontSizeChange(parseInt(e.target.value, 10));
+              }}
               className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
             />
@@ -185,9 +191,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
               min="8"
               max="72"
               value={textSettings.fontSize}
-              onChange={e =>
-                handleFontSizeChange(parseInt(e.target.value, 10) || 12)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
+                handleFontSizeChange(parseInt(e.target.value, 10) || 12);
+              }}
               className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isLoading}
             />
@@ -202,7 +208,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
           <div className="relative" ref={colorPickerRef}>
             <button
               type="button"
-              onClick={() => setIsColorPickerOpen(!isColorPickerOpen)}
+              onClick={(): void => {
+                setIsColorPickerOpen(!isColorPickerOpen);
+              }}
               className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isLoading}
             >
@@ -238,7 +246,9 @@ const TextEditor: React.FC<TextEditorProps> = memo(
                     <button
                       key={color}
                       type="button"
-                      onClick={() => handleColorChange(color)}
+                      onClick={(): void => {
+                        handleColorChange(color);
+                      }}
                       className={`w-8 h-8 rounded border-2 hover:scale-110 transition-transform ${
                         textSettings.color === color
                           ? 'border-blue-500'
@@ -258,7 +268,11 @@ const TextEditor: React.FC<TextEditorProps> = memo(
                   <input
                     type="color"
                     value={textSettings.color}
-                    onChange={e => handleColorChange(e.target.value)}
+                    onChange={(
+                      e: React.ChangeEvent<HTMLInputElement>
+                    ): void => {
+                      handleColorChange(e.target.value);
+                    }}
                     className="w-full h-8 border border-gray-300 rounded cursor-pointer"
                   />
                 </div>

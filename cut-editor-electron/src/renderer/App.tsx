@@ -9,7 +9,6 @@ import {
   Header,
   Layout,
   ImageCanvas,
-  Sidebar,
   FrameSelector,
   ImageUploader,
   TextEditor,
@@ -35,7 +34,8 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+    fontFamily:
+      '"-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
   },
   shape: {
     borderRadius: 8,
@@ -60,56 +60,81 @@ const AppContent: React.FC = () => {
           onImageScaleChange={actions.updateImageScale}
         />
 
-        <Sidebar>
-          <div className="space-y-6">
-            <StatusDisplay
-              error={state.uiState.error}
-              loadingMessage={state.uiState.loadingMessage}
-              isLoading={state.uiState.isLoading}
-              isExporting={state.uiState.isExporting}
-              exportProgress={state.uiState.exportProgress}
-              onClearError={() => actions.setError(null)}
-            />
-            <FrameSelector
-              availableFrames={state.availableFrames}
-              currentFrame={state.currentFrame}
-              onFrameSelect={actions.selectFrame}
-              isLoading={state.uiState.isLoading}
-            />
-            <ImageUploader
-              selectedSlotId={state.uiState.selectedSlotId}
-              onImageUpload={(slotId: string, file: File) => {
-                // Create HTMLImageElement from File
+        <div className="space-y-6">
+          <StatusDisplay
+            error={state.uiState.error}
+            loadingMessage={state.uiState.loadingMessage}
+            isLoading={state.uiState.isLoading}
+            isExporting={state.uiState.isExporting}
+            exportProgress={state.uiState.exportProgress}
+            onClearError={(): void => actions.setError(null)}
+          />
+          <FrameSelector
+            availableFrames={state.availableFrames}
+            currentFrame={state.currentFrame}
+            onFrameSelect={actions.selectFrame}
+            isLoading={state.uiState.isLoading}
+          />
+          <ImageUploader
+            selectedSlotId={state.uiState.selectedSlotId}
+            onImageUpload={async (
+              slotId: string,
+              file: File
+            ): Promise<void> => {
+              try {
+                actions.setLoading(true, 'Loading image...');
+
+                // Create HTMLImageElement from file using object URL
                 const img = new Image();
-                img.onload = () => {
-                  actions.loadImageToSlot(slotId, file, img);
-                };
-                img.src = URL.createObjectURL(file);
-              }}
-              isLoading={state.uiState.isLoading}
-            />
-            <TextEditor
-              textSettings={state.textSettings}
-              onTextUpdate={actions.updateTextSettings}
-              isLoading={state.uiState.isLoading}
-            />
-            <ActionButtons
-              onReset={actions.resetAll}
-              onResetSelected={actions.resetSelectedImage}
-              onApplyText={() => {
-                // Apply text functionality will be implemented in Phase 3
-                console.log('Apply text clicked');
-              }}
-              onExport={() => {
-                // Export functionality will be implemented in Phase 3
-                console.log('Export clicked');
-              }}
-              isLoading={state.uiState.isLoading}
-              isExporting={state.uiState.isExporting}
-              exportProgress={state.uiState.exportProgress}
-            />
-          </div>
-        </Sidebar>
+                const objectUrl = URL.createObjectURL(file);
+
+                await new Promise<void>((resolve, reject) => {
+                  img.onload = (): void => {
+                    // Clean up object URL after loading
+                    URL.revokeObjectURL(objectUrl);
+                    actions.loadImageToSlot(slotId, file, img);
+                    resolve();
+                  };
+
+                  img.onerror = (): void => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('Failed to load image'));
+                  };
+
+                  img.src = objectUrl;
+                });
+
+                actions.setLoading(false);
+              } catch (error) {
+                actions.setLoading(false);
+                actions.setError(
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to load image'
+                );
+              }
+            }}
+            isLoading={state.uiState.isLoading}
+          />
+          <TextEditor
+            textSettings={state.textSettings}
+            onTextUpdate={actions.updateTextSettings}
+            isLoading={state.uiState.isLoading}
+          />
+          <ActionButtons
+            onReset={actions.resetAll}
+            onResetSelected={actions.resetSelectedImage}
+            onApplyText={(): void => {
+              // Apply text functionality will be implemented in Phase 3
+            }}
+            onExport={(): void => {
+              // Export functionality will be implemented in Phase 3
+            }}
+            isLoading={state.uiState.isLoading}
+            isExporting={state.uiState.isExporting}
+            exportProgress={state.uiState.exportProgress}
+          />
+        </div>
       </Layout>
     </ErrorBoundary>
   );

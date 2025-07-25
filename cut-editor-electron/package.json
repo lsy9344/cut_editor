@@ -6,8 +6,8 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "package": "NODE_OPTIONS=\"--no-deprecation\" electron-forge package",
+    "make": "NODE_OPTIONS=\"--no-deprecation\" electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "lint:fix": "eslint --ext .ts,.tsx . --fix",
@@ -16,7 +16,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,css,md}\"",
     "test": "jest",
     "test:watch": "jest --watch",
-    "build": "electron-forge package"
+    "build": "NODE_OPTIONS=\"--no-deprecation\" electron-forge package",
+    "build:verbose": "electron-forge package"
   },
   "keywords": [],
   "author": {

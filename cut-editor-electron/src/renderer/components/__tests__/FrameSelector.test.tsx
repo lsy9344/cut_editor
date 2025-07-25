@@ -13,7 +13,6 @@ const mockFrames: FrameTemplate[] = [
     id: 'horizontal_2',
     type: 'horizontal_2',
     name: '2 Panel Horizontal',
-    imagePath: '/test/horizontal_2.png',
     dimensions: { width: 800, height: 400 },
     slots: [
       {
@@ -34,7 +33,6 @@ const mockFrames: FrameTemplate[] = [
     id: 'vertical_2',
     type: 'vertical_2',
     name: '2 Panel Vertical',
-    imagePath: '/test/vertical_2.png',
     dimensions: { width: 400, height: 800 },
     slots: [
       {

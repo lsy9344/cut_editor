@@ -1,5 +1,7 @@
 # Cut Editor - Claude Code Integration
 
+############Please use Korean for all replies to me.
+
 ## Development Partnership
 
 We're building a production-quality Electron application together. Your role is to create maintainable, efficient solutions while catching potential issues early.

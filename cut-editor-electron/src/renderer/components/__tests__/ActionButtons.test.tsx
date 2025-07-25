@@ -3,7 +3,13 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ActionButtons from '../ActionButtons';
 
@@ -123,7 +129,7 @@ describe('ActionButtons', () => {
     });
   });
 
-  it('auto-hides confirmation after timeout', async () => {
+  it('auto-hides reset all confirmation after timeout', async () => {
     jest.useFakeTimers();
 
     render(<ActionButtons {...defaultProps} />);
@@ -133,8 +139,34 @@ describe('ActionButtons', () => {
 
     expect(screen.getByText('Click again to confirm')).toBeInTheDocument();
 
-    // Fast-forward time
-    jest.advanceTimersByTime(3000);
+    // Fast-forward time wrapped in act()
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText('Click again to confirm')
+      ).not.toBeInTheDocument();
+    });
+
+    jest.useRealTimers();
+  });
+
+  it('auto-hides reset selected confirmation after timeout', async () => {
+    jest.useFakeTimers();
+
+    render(<ActionButtons {...defaultProps} />);
+
+    const resetButton = screen.getByText('Reset Selected Image');
+    fireEvent.click(resetButton);
+
+    expect(screen.getByText('Click again to confirm')).toBeInTheDocument();
+
+    // Fast-forward time wrapped in act()
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
 
     await waitFor(() => {
       expect(

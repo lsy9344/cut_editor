@@ -7,19 +7,13 @@ import React, { memo, useCallback, useState } from 'react';
 import { FrameSelectorProps, FrameTemplate } from '../../shared/types';
 
 // NOTE: Material-UI 컴포넌트를 사용하기 위해 필요한 import 구문들을 추가했습니다.
-import {
-  Typography,
-  Box,
-  useTheme,
-  alpha,
-  Button,
-} from '@mui/material';
+import { Typography, Box, useTheme, alpha, Button } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const FrameSelector: React.FC<FrameSelectorProps> = memo(
   ({ availableFrames = [], currentFrame, onFrameSelect, isLoading }) => {
     const [hoveredFrame, setHoveredFrame] = useState<string | null>(null);
-    
+
     // NOTE: MUI 테마의 색상, 그림자 등을 사용하기 위해 useTheme 훅을 추가했습니다.
     const theme = useTheme();
 
@@ -88,7 +82,7 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
               y={slot.bounds.y + slot.bounds.height / 2}
               textAnchor="middle"
               dominantBaseline="central"
-              style={{ fontSize: '12px', fill: '#4b5563'}}
+              style={{ fontSize: '12px', fill: '#4b5563' }}
             >
               {index + 1}
             </text>
@@ -133,12 +127,12 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
             return (
               <Button
                 key={frame.id}
-                variant={isSelected ? "contained" : "outlined"}
-                color={isSelected ? "primary" : "success"}
-                onClick={() => handleFrameClick(frame)}
-                onKeyDown={(e) => handleKeyDown(e, frame)}
-                onMouseEnter={() => setHoveredFrame(frame.id)}
-                onMouseLeave={() => setHoveredFrame(null)}
+                variant={isSelected ? 'contained' : 'outlined'}
+                color={isSelected ? 'primary' : 'success'}
+                onClick={(): void => handleFrameClick(frame)}
+                onKeyDown={(e): void => handleKeyDown(e, frame)}
+                onMouseEnter={(): void => setHoveredFrame(frame.id)}
+                onMouseLeave={(): void => setHoveredFrame(null)}
                 disabled={isLoading}
                 aria-label={`Select ${frame.name} layout with ${frame.slots.length} slots`}
                 aria-pressed={isSelected}
@@ -149,18 +143,18 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
                   borderWidth: 2,
                   transition: 'all 0.2s',
                   textTransform: 'none',
-                  backgroundColor: isSelected 
-                    ? theme.palette.primary.main 
+                  backgroundColor: isSelected
+                    ? theme.palette.primary.main
                     : theme.palette.background.paper,
-                  borderColor: isSelected 
-                    ? theme.palette.primary.main 
+                  borderColor: isSelected
+                    ? theme.palette.primary.main
                     : theme.palette.success.main,
                   '&:hover': {
-                    backgroundColor: isSelected 
-                      ? theme.palette.primary.dark 
+                    backgroundColor: isSelected
+                      ? theme.palette.primary.dark
                       : alpha(theme.palette.success.main, 0.1),
-                    borderColor: isSelected 
-                      ? theme.palette.primary.dark 
+                    borderColor: isSelected
+                      ? theme.palette.primary.dark
                       : theme.palette.success.dark,
                     boxShadow: theme.shadows[2],
                   },
@@ -174,17 +168,25 @@ const FrameSelector: React.FC<FrameSelectorProps> = memo(
                   },
                 }}
               >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Box
+                    sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}
+                  >
                     {generateFramePreview(frame)}
                   </Box>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      textAlign: 'center', 
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      textAlign: 'center',
                       color: isSelected ? 'white' : theme.palette.text.primary,
                       fontWeight: 'medium',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
                     }}
                   >
                     {frame.name}

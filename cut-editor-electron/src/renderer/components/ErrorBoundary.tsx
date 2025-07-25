@@ -69,7 +69,7 @@ const DefaultErrorFallback: React.FC<{
           Try Again
         </button>
         <button
-          onClick={() => window.location.reload()}
+          onClick={(): void => window.location.reload()}
           className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
         >
           Reload App
@@ -106,8 +106,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
     // Log error to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error);
-      console.error('Error Info:', errorInfo);
+      // Error logging would be handled by proper logging service in production
     }
 
     // In production, you might want to log this to an error reporting service

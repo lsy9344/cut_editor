@@ -3,6 +3,12 @@
  * Comprehensive type definitions for the entire application
  */
 
+// Basic Utility Types
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
 // Frame Template Types
 export type FrameType =
   | 'horizontal_2'
@@ -18,7 +24,6 @@ export interface FrameTemplate {
   id: string;
   type: FrameType;
   name: string;
-  imagePath: string;
   slots: FrameSlot[];
   dimensions: { width: number; height: number };
 }
@@ -155,7 +160,7 @@ export interface FrameSelectorProps {
 
 export interface ImageUploaderProps {
   selectedSlotId: string | null;
-  onImageUpload: (slotId: string, file: File) => void;
+  onImageUpload: (slotId: string, file: File) => Promise<void> | void;
   isLoading: boolean;
 }
 
@@ -247,14 +252,45 @@ export interface ImageData {
   width: number;
   height: number;
   format: string;
+  // Sharp.js enhanced metadata
+  originalFormat?: string;
+  hasAlpha?: boolean;
+  density?: number; // DPI information
+  colorSpace?: string;
+  channels?: number;
+  depth?: string; // bit depth (e.g., 'uchar', 'short')
+  isAnimated?: boolean;
+  pages?: number; // for multi-page formats like TIFF
+  metadata?: {
+    orientation?: number;
+    chromaSubsampling?: string;
+    isProgressive?: boolean;
+    compression?: string;
+    predictor?: string;
+    pyramid?: boolean;
+    bitdepth?: number;
+    miniswhite?: boolean;
+    xmpPresent?: boolean;
+    iccPresent?: boolean;
+    exifPresent?: boolean;
+  };
 }
 
 export interface ExportData {
   imageBuffer: ArrayBuffer;
   width: number;
   height: number;
-  format: 'png' | 'jpeg';
+  format: 'png' | 'jpeg' | 'webp';
   quality?: number;
+  // High-resolution export metadata
+  density?: number; // DPI for high-resolution export
+  colorSpace?: 'srgb' | 'adobe-rgb' | 'p3';
+  hasAlpha?: boolean;
+  compression?: {
+    level?: number; // PNG compression level (0-9)
+    progressive?: boolean; // JPEG progressive encoding
+    lossless?: boolean; // WebP lossless mode
+  };
 }
 
 export interface FontData {
